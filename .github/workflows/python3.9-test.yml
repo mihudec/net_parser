@@ -37,7 +37,8 @@ jobs:
 
       - name: Install net_models
         run: |
-          python ./net_models/setup.py install
+          cd ./net_models/
+          python setup.py install
 
       - name: Pip Freeze Check
         run: |
