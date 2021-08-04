@@ -2,7 +2,7 @@ import pathlib
 import re
 import timeit
 from typing import Union, List
-from net_parser.utils import get_logger
+from net_parser.utils import get_logger, load_text
 from net_parser.config import BaseConfigLine
 
 re._MAXCACHE = 1024
@@ -59,36 +59,12 @@ class BaseConfigParser(object):
         """
         self.verbosity = verbosity
         self.logger = get_logger(name=name, verbosity=verbosity)
-        self.config = config
+        self._config = config
         self.lines = []
 
     def load_config(self) -> List[str]:
-        config_lines = []
-        if isinstance(self.config, list):
-            self.logger.debug(msg="Treating config as list of config lines.")
-            config_lines = [x for x in self.config if (isinstance(x, str) and x != "")]
-        elif isinstance(self.config, pathlib.Path):
-            self.logger.debug(msg="Treating config as pathlib Path.")
-            path = self._check_path(filepath=self.config)
-            if isinstance(path, pathlib.Path):
-                config_lines = [x for x in path.read_text().split("\n") if x != ""]
-        elif isinstance(self.config, str):
-            path = None
-            try:
-                path = pathlib.Path(self.config).resolve()
-                path = self._check_path(filepath=path)
-                self.logger.debug("Treating config as string filepath.")
-            except OSError as e:
-                self.logger.debug("Config is not a valid path.")
-            except Exception as e:
-                self.logger.error(msg=f"Unhandle Exception occured while resolving path '{self.config}'")
-                raise
-            if path is not None:
-                config_lines = [x for x in path.read_text().split("\n") if x != ""]
-            else:
-                self.logger.debug(msg="Treating config as multi-line string.")
-                config_lines = [x for x in self.config.split("\n") if x != ""]
-        return config_lines
+        raw_lines = load_text(obj=self._config, logger=self.logger)
+        return raw_lines
 
     def parse(self):
         """
@@ -207,7 +183,7 @@ class BaseConfigParser(object):
             self.logger.error(msg="Error while compiling regex '{}'. Exception: {}".format(regex, repr(e)))
         return pattern
 
-    def find_objects(self, regex, flags=re.MULTILINE):
+    def find_objects(self, regex, flags=re.MULTILINE, group: Union[int, str, None] = None):
         """
         Function for filtering Config Lines Objects based on given regex.
 
@@ -236,10 +212,17 @@ class BaseConfigParser(object):
             pattern = self._compile_regex(regex=regex, flags=flags)
         else:
             pattern = regex
+        lines = []
         results = []
         for line in self.lines:
-            if re.search(pattern=pattern, string=line.text):
-                results.append(line)
+            result = line.re_search(regex=pattern, group=group)
+            if result:
+                lines.append(line)
+                results.append(result)
+        if group is None:
+            results = list(lines)
+        else:
+            return results
         self.logger.debug(msg="Matched {} lines for query '{}'".format(len(results), regex))
         return results
 
