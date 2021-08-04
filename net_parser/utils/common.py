@@ -51,12 +51,12 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger, 
             lines = [obj]
         except InvalidPathSyntax as e:
             path = None
-            lines = obj.split("\n")
+            lines = obj.splitlines()
 
     elif isinstance(obj, pathlib.Path):
         try:
             path = check_path(path=obj, logger=logger)
-            lines = path.read_text().split("\n")
+            lines = path.read_text().splitlines()
         except FileNotFoundError as e:
             msg = f"Got path to load, but the path does not exist. Path: {obj}"
             logger.critical(msg=msg)

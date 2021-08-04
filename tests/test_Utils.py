@@ -42,6 +42,7 @@ class TestCheckPath(unittest.TestCase):
         )
         self.assertIsInstance(path, pathlib.Path)
 
+
 class TestLoadText(unittest.TestCase):
 
     def test_load_singleline(self):
