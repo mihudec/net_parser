@@ -20,7 +20,7 @@ class TestCheckPath(unittest.TestCase):
             check_path(path=r"\nonexistent.txt", logger=TEST_LOGGER)
 
     def test_invalid_path_03(self):
-        with self.assertRaises(expected_exception=InvalidPathSyntax):
+        with self.assertRaises(expected_exception=(InvalidPathSyntax, FileNotFoundError)):
             check_path(
                 path="This is not\n"
                      "a\n"
@@ -80,6 +80,14 @@ class TestLoadText(unittest.TestCase):
             logger=TEST_LOGGER
         )
         self.assertIsInstance(lines, list)
+
+    def test_load_valid_path_str(self):
+        lines = load_text(
+            obj=str(RESOURCES_DIR.joinpath('ios').joinpath('data').joinpath('test_load_01.txt')),
+            logger=TEST_LOGGER
+        )
+        self.assertIsInstance(lines, list)
+        self.assertTrue(len(lines) > 0)
 
     def test_load_invalid_path(self):
         with self.assertRaises(expected_exception=FileNotFoundError):

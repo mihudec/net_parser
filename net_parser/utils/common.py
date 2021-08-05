@@ -47,8 +47,10 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger, 
         # Might be a path
         try:
             path = check_path(path=obj, logger=logger)
+            lines = path.read_text().splitlines()
         except FileNotFoundError as e:
-            lines = [obj]
+            path = None
+            lines = obj.splitlines()
         except InvalidPathSyntax as e:
             path = None
             lines = obj.splitlines()
