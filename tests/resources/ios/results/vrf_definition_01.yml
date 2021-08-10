@@ -6,9 +6,14 @@
       safi: unicast
       route_targets:
         - rt: "1:1"
-          action: both
+          action: export
         - rt: "1:1"
-          action: both
+          action: import
+        - rt: "1:1"
+          action: export
+          rt_type: stitching
+        - rt: "1:1"
+          action: import
           rt_type: stitching
 - name: TEST-VRF-2
   description: Just for Test
