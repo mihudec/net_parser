@@ -3,7 +3,7 @@ import re
 import json
 import timeit
 import functools
-from net_parser.utils import get_logger
+from net_parser.utils import get_logger, first_candidate_or_none
 
 
 class BaseConfigLine(object):
@@ -33,7 +33,7 @@ class BaseConfigLine(object):
         self.text = text
         self.indent = len(self.text) - len(self.text.lstrip(" "))
         self.type = None
-        self.logger.debug("Parsing line: #{}: '{}'".format(self.number, self.text))
+        # self.logger.debug("Parsing line: #{}: '{}'".format(self.number, self.text))
 
 
     def return_obj(self):
@@ -234,7 +234,7 @@ class BaseConfigLine(object):
         if pattern is None:
             self.logger.warning("Got invalid regex {}".format(regex))
             return None
-        m = re.search(pattern=pattern, string=self.text)
+        m = pattern.search(string=self.text)
         if m:
             if group is None:
                 return m.group(0)
@@ -363,6 +363,9 @@ class BaseConfigLine(object):
             else:
                 entry[key] = False
         return entry
+
+    def first_candidate_or_none(self, candidates: list, wanted_type=None):
+        return first_candidate_or_none(candidates=candidates, logger=self.logger, wanted_type=wanted_type)
 
     def __str__(self):
         return "[{} #{} ({}): '{}']".format(self._name, self.number, self.type, self.text)

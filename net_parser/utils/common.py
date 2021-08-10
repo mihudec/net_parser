@@ -66,3 +66,15 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger, 
     logger.debug(f"Loaded {len(lines)} lines.")
     return lines
 
+
+def first_candidate_or_none(candidates: list, logger: logging.Logger, wanted_type=None):
+    if len(candidates) == 0:
+        return None
+    elif len(candidates) == 1:
+        if wanted_type is None:
+            return candidates[0]
+        else:
+            return wanted_type(candidates[0])
+    else:
+        logger.error(msg='Multiple candidates found.')
+        return None

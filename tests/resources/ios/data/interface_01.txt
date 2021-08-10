@@ -1,0 +1,19 @@
+interface TenGigabitEthernet0/0/1
+ description Uplink-01
+ mtu 9214
+ ip address 192.0.2.2 255.255.255.254
+ ip mtu 9000
+ load-interval 30
+ carrier-delay msec 0
+ cdp enable
+ lldp transmit
+ lldp receive
+ bfd template BFD-1hop-5ms
+ ip router isis tsdr
+ isis circuit-type level-2-only
+ isis network point-to-point
+ isis metric 10 level-1
+ isis metric 10 level-2
+ isis authentication mode md5
+ isis authentication key-chain ISIS-KEY
+!

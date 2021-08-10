@@ -1,4 +1,5 @@
 import pathlib
+import re
 import unittest
 from tests import BaseNetParserTest
 
@@ -47,7 +48,10 @@ class TestIosConfigParser(BaseNetParserTest):
     VENDOR = "ios"
 
     def get_config(self) -> IosConfigParser:
-        return self.TEST_CLASS(self.RESOURCES_DIR.joinpath(self.VENDOR).joinpath('data').joinpath('test_load_01.txt'))
+        return self.TEST_CLASS(
+            self.RESOURCES_DIR.joinpath(self.VENDOR).joinpath('data').joinpath('test_load_01.txt'),
+            verbosity=VERBOSITY
+        )
 
     def test_find_objects_01(self):
         config = self.get_config()
@@ -65,10 +69,46 @@ class TestIosConfigParser(BaseNetParserTest):
         self.assertEqual(len(candidates), 1)
         self.assertIsInstance(candidates[0], str)
 
+    def test_hostname(self):
+        config = self.get_config()
+        config.parse()
+        self.assertIsInstance(config.hostname, str)
+
+    def test_interfaces(self):
+        config = self.get_config()
+        config.parse()
+
+    def test_interface_01(self):
+        data_path, results_path = self.get_test_resources(test_name='interface_01')
+        config = self.TEST_CLASS(config=data_path, verbosity=VERBOSITY)
+        config.parse()
+        interface_lines = list(config.interface_lines)
+        for i in interface_lines:
+            i.isis
+        interfaces_models = list(config.interfaces)
+
 
 class TestIosInterfaceParser(BaseNetParserTest):
-    pass
 
+    VENDOR = "ios"
+
+    def test_ospf_01(self):
+        data_path, results_path = self.get_test_resources(test_name='interface_ospf_01')
+        config = IosConfigParser(config=data_path, verbosity=VERBOSITY)
+        config.parse()
+        want = self.load_resource_yaml(path=results_path)
+        have = [x.serial_dict(exclude_none=True) for x in config.interfaces]
+        self.assertEqual(want, have)
+
+
+class TestIosAaaParser(BaseNetParserTest):
+
+    VENDOR = "ios"
+
+    def test_load_aaa_01(self):
+        data_path, results_path = self.get_test_resources(test_name='aaa_config-01')
+        config = IosConfigParser(config=data_path, verbosity=VERBOSITY)
+        config.parse()
 
 del BaseNetParserTest
 

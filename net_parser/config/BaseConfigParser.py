@@ -2,16 +2,17 @@ import pathlib
 import re
 import timeit
 from typing import Union, List
-from net_parser.utils import get_logger, load_text
+from net_parser.utils import get_logger, load_text, first_candidate_or_none
 from net_parser.config import BaseConfigLine
 
 re._MAXCACHE = 1024
+
 
 class BaseConfigParser(object):
 
     PATTERN_TYPE = type(re.compile(pattern=""))
 
-    def __init__(self, config=Union[pathlib.Path, List[str], str], verbosity=4, name="BaseConfigParser", **kwargs):
+    def __init__(self, config: Union[pathlib.Path, List[str], str], verbosity: int = 4, name: str = "BaseConfigParser", **kwargs):
         """
         Base class for parsing Cisco-like configs
 
@@ -317,3 +318,6 @@ class BaseConfigParser(object):
             else:
                 entries.append(entry)
         return entries
+
+    def first_candidate_or_none(self, candidates: list, wanted_type=None):
+        return first_candidate_or_none(candidates=candidates, logger=self.logger, wanted_type=wanted_type)

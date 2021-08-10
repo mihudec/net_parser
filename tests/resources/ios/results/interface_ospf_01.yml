@@ -1,0 +1,34 @@
+- name: TenGigabitEthernet0/0/0
+  tags:
+    - l3
+    - physical
+  l3_port:
+    ospf:
+      process_id: 1
+      area: 0
+      network_type: point-to-point
+      cost: 100
+      authentication:
+        method: message-digest
+        key:
+          value: SuperSec
+          encryption_type: 0
+      timers:
+        hello: 5
+        dead: 15
+        retransmit: 2
+      bfd: true
+- name: TenGigabitEthernet0/0/1
+  tags:
+    - l3
+    - physical
+  l3_port:
+    ospf:
+      process_id: 1
+      area: 0
+      network_type: point-to-point
+      cost: 100
+      authentication:
+        method: key-chain
+        keychain: OSPF-KEY
+      bfd: false

@@ -1,0 +1,19 @@
+aaa new-model
+aaa authentication login default group TACACS-GROUP local
+aaa authentication login CONSOLE local
+aaa authentication enable default group TACACS-GROUP local
+aaa authentication enable CONSOLE enable
+aaa authorization exec default group TACACS-GROUP local
+aaa authorization exec CONSOLE local
+aaa authorization commands 1 default group TACACS-GROUP local
+aaa authorization commands 15 default group TACACS-GROUP local
+aaa authorization commands 1 CONSOLE local
+aaa authorization commands 15 CONSOLE local
+aaa authorization console
+aaa authorization config-commands
+aaa accounting exec default start-stop group TACACS-GROUP
+aaa accounting exec CONSOLE none
+aaa accounting commands 1 default start-stop group TACACS-GROUP
+aaa accounting commands 15 default start-stop group TACACS-GROUP
+aaa accounting commands 1 CONSOLE none
+aaa accounting commands 15 CONSOLE none

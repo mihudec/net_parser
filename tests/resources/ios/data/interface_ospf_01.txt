@@ -1,0 +1,19 @@
+interface TenGigabitEthernet0/0/0
+ ip ospf 1 area 0
+ ip ospf network point-to-point
+ ip ospf cost 100
+ ip ospf priority 100
+ ip ospf authentication message-digest
+ ip ospf authentication-key SuperSec
+ ip ospf hello-interval 5
+ ip ospf dead-interval 15
+ ip ospf retransmit-interval 2
+ ip ospf bfd
+!
+interface TenGigabitEthernet0/0/1
+ ip ospf 1 area 0
+ ip ospf network point-to-point
+ ip ospf cost 100
+ ip ospf priority 100
+ ip ospf authentication key-chain OSPF-KEY
+ ip ospf bfd disable

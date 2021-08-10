@@ -1,0 +1,28 @@
+- name: TEST-VRF-1
+  description: Just for Test
+  rd: "1:1"
+  address_families:
+    - afi: ipv4
+      safi: unicast
+      route_targets:
+        - rt: "1:1"
+          action: both
+        - rt: "1:1"
+          action: both
+          rt_type: stitching
+- name: TEST-VRF-2
+  description: Just for Test
+  rd: "1:2"
+  address_families:
+    - afi: ipv4
+      route_targets:
+        - rt: "1:2"
+          action: export
+        - rt: "1:2"
+          action: import
+    - afi: ipv6
+      route_targets:
+        - rt: "1:2"
+          action: export
+        - rt: "1:2"
+          action: import

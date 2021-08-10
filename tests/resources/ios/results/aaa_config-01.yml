@@ -1,0 +1,81 @@
+params:
+  authentication:
+    login:
+      - name: default
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+          - action: local
+      - name: CONSOLE
+        action_list:
+          - action: local
+    enable:
+      - name: default
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+          - action: local
+      - name: CONSOLE
+        action_list:
+          - action: enable
+  authorization:
+    exec:
+      - name: default
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+          - action: local
+      - name: CONSOLE
+        action_list:
+          - action: local
+    commands:
+      - name: default
+        level: 1
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+          - action: local
+      - name: default
+        level: 15
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+          - action: local
+      - name: CONSOLE
+        level: 1
+        action_list:
+          - action: local
+      - name: CONSOLE
+        level: 15
+        action_list:
+          - action: local
+    authorize_console: true
+    authorize_config_commands: true
+  accounting:
+    exec:
+      - name: default
+        record: start-stop
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+      - name: CONSOLE
+        record: none
+    commands:
+      - name: default
+        level: 1
+        record: start-stop
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+      - name: default
+        level: 15
+        record: start-stop
+        action_list:
+          - action: group
+            group: TACACS-GROUP
+      - name: CONSOLE
+        level: 1
+        record: none
+      - name: CONSOLE
+        level: 15
+        record: none

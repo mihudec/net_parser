@@ -1,0 +1,3 @@
+name: TenGigabitEthernet0/0/1
+description: Uplink-01
+mtu: 9214
