@@ -85,10 +85,11 @@ class IosVrfDefinitionParser(IosConfigLine):
     def model(self):
         data = {
             'name': self.name,
+            'rd': self.rd,
             'description': self.description,
             'address_families': self.address_families,
         }
-        model = VRFModel(**{k:v for k, v in data if v is not None})
+        model = VRFModel(**{k:v for k, v in data.items() if v is not None})
         return model
 
 

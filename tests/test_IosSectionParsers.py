@@ -22,6 +22,7 @@ class TestIosVrfDefinitionParser(BaseNetParserTest):
         config = IosConfigParser(config=data_path, verbosity=VERBOSITY)
         config.parse()
         have = [x.serial_dict(exclude_none=True) for x in config.vrfs]
+        self.assertEqual(want, have)
 
 del BaseNetParserTest
 
