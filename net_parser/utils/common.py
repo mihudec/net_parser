@@ -2,7 +2,7 @@ import logging
 import pathlib
 from typing import Union, List
 
-from .exceptions import *
+from net_parser.exceptions import *
 
 def check_path(path: pathlib.Path, logger: logging.Logger) -> pathlib.Path:
     if not isinstance(path, pathlib.Path):

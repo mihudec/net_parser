@@ -2,7 +2,7 @@ import pathlib
 import unittest
 from net_parser.utils.common import check_path, load_text
 from net_parser.utils.get_logger import get_logger
-from net_parser.utils.exceptions import *
+from net_parser.exceptions import *
 
 from tests import RESOURCES_DIR
 

@@ -1,7 +1,10 @@
 import pathlib
 import json
-import yaml
 import unittest
+
+from ruamel.yaml import YAML
+yaml = YAML(typ='safe')
+yaml.default_flow_style = False
 
 TESTS_DIR = pathlib.Path(__file__).resolve().parent.absolute()
 RESOURCES_DIR = TESTS_DIR.joinpath("resources")
@@ -22,7 +25,7 @@ class BaseNetParserTest(unittest.TestCase):
 
     def load_resource_yaml(self, path: pathlib.Path) -> dict:
         data = None
-        data = yaml.safe_load(path.read_text())
+        data = yaml.load(path.read_text())
         return data
 
 
