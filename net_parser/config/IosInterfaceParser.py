@@ -1,15 +1,20 @@
 import functools
 import re
-from . import BaseConfigLine
+from .IosSectionParsers import IosConfigLine
 from net_models.models.interfaces.InterfaceModels import *
 from net_models.models.interfaces.L2InterfaceModels import *
 from net_models.models.interfaces.L3InterfaceModels import *
+
+from net_models.validators import expand_vlan_range
 
 from typing import (
     Union
 )
 
-class IosInterfaceParser(BaseConfigLine):
+INTERFACE_SECTION_REGEX = re.compile(pattern=r'^interface \S+$', flags=re.MULTILINE)
+
+
+class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
 
     _name_regex = re.compile(pattern=r"^interface (?P<name>.*)\Z", flags=re.MULTILINE)
     _description_regex = re.compile(pattern=r"^ description (?P<description>.*?)\Z", flags=re.MULTILINE)
@@ -46,19 +51,44 @@ class IosInterfaceParser(BaseConfigLine):
     _isis_metric_regex = re.compile(pattern=r"^ isis metric (?P<metric>\d+) (?P<level>\S+)", flags=re.MULTILINE)
 
 
-    def __init__(self, number: int, text: str, config, verbosity: int):
+    _native_vlan_regex = re.compile(pattern=r"^ switchport trunk native vlan (?P<native_vlan>\d+)", flags=re.MULTILINE)
+    _trunk_encapsulation_regex = re.compile(pattern=r"^ switchport trunk encapsulation (?P<encapsulation>dot1q|isl|negotiate)", flags=re.MULTILINE)
+    _switchport_mode_regex = re.compile(pattern=r"^ switchport mode (?P<switchport_mode>access|trunk|dot1q-tunnel|private-vlan|dynamic)")
+    _switchport_nonegotiate_regex = re.compile(pattern=r"^ switchport nonegotiate")
+    _trunk_allowed_vlans_regex = re.compile(pattern=r"^ switchport trunk allowed vlan(?: add)? (?P<allowed_vlans>\S+)", flags=re.MULTILINE)
+    _access_vlan_regex = re.compile(pattern=r"^ switchport access vlan (?P<access_vlan>\d+)", flags=re.MULTILINE)
+    _voice_vlan_regex = re.compile(pattern=r"^ switchport voice vlan (?P<voice_vlan>\d+)")
+
+    _hsrp_version_regex = re.compile(pattern=r"^ standby version (?P<version>\d)", flags=re.MULTILINE)
+    _hsrp_ipv4_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) ip (?P<address>\S+)(?: (?P<secondary>secondary))?", flags=re.MULTILINE)
+    _hsrp_priority_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) priority (?P<priority>\S+)", flags=re.MULTILINE)
+    _hsrp_preemption_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) (?P<preemption>preempt)", flags=re.MULTILINE)
+    _hsrp_timers_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) timers (?:(?P<milliseconds>msec) )?(?P<hello>\d+) (?P<hold>\d+)", flags=re.MULTILINE)
+    _hsrp_track_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) track (?P<track_id>\d+) (?P<action>shutdown|decrement)(?: (?P<decrement_value>\d+))?", flags=re.MULTILINE)
+    _hsrp_authentication_regexes = [
+        re.compile(pattern=r"^ standby (?P<group_id>\d+) authentication (?:(?P<method>md5|text) )?(?:key-string )?(?:(?P<encryption_type>\d) )?(?P<value>\S+)$", flags=re.MULTILINE),
+        re.compile(pattern=r"^ standby (?P<group_id>\d+) authentication md5 (?P<method>key-chain) (?P<keychain>\S+)$", flags=re.MULTILINE)
+    ]
+    _hsrp_name_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) name (?P<name>\S+)$", flags=re.MULTILINE)
+
+    _proxy_arp_regex = re.compile(pattern=r"^ (?:(?P<no>no) )?ip proxy-arp$", flags=re.MULTILINE)
+
+
+
+
+    def __init__(self, number: int, text: str, config, verbosity: int = 4):
         super().__init__(number=number, text=text, config=config, verbosity=verbosity, name="IosInterfaceLine")
 
-    @property
+    @functools.cached_property
     def name(self) -> Union[str, None]:
         return self.re_match(regex=self._name_regex, group=1)
 
-    @property
+    @functools.cached_property
     def description(self) -> Union[str, None]:
         candidates = self.re_search_children(regex=self._description_regex, group=1)
         return self.first_candidate_or_none(candidates=candidates)
 
-    @property
+    @functools.cached_property
     def is_enabled(self) -> Union[bool, None]:
         shutdown_candidates = self.re_search_children(regex=self._shutdown_regex, group='shutdown')
         no_shutdown_candidates = self.re_search_children(regex=self._no_shutdown_regex, group='no_shutdown')
@@ -68,13 +98,33 @@ class IosInterfaceParser(BaseConfigLine):
             return True
         else:
             if self.config.DEFAULTS.INTERFACES_DEFAULT_NO_SHUTDOWN is not None:
-                self.logger.warning(msg="Using platform default value for interface admin state.")
+                self.logger.info(msg=f"Interface {self.name}: Using platform default value for interface admin state.")
                 return self.config.DEFAULTS.INTERFACES_DEFAULT_NO_SHUTDOWN
             else:
-                self.logger.debug("Platform default for interface admin state not set.")
+                self.logger.debug(msg=f"Interface {self.name}: Platform default for interface admin state not set.")
                 return None
 
-    @property
+    @functools.cached_property
+    def is_routed(self):
+        candidates = self.re_search_children(regex=re.compile(pattern="(?:no )?ip address"))
+        self.logger.debug(msg=f"Interface {self.name}: {candidates=}")
+        if len(candidates):
+            return True
+        else:
+            return False
+
+    @functools.cached_property
+    def is_switched(self):
+        candidates = self.re_search_children(regex=re.compile(pattern="(?:no )?ip address"))
+        self.logger.debug(msg=f"Interface {self.name}: {candidates=}")
+        if len(candidates):
+            return False
+        else:
+            return True
+
+
+
+    @functools.cached_property
     def cdp(self) -> Union[InterfaceCdpConfig, None]:
         cdp_candidates = self.re_search_children(regex=self._cdp_regex, group=1)
         no_cdp_candidates = self.re_search_children(regex=self._no_cdp_regex, group=1)
@@ -91,7 +141,7 @@ class IosInterfaceParser(BaseConfigLine):
                 return InterfaceCdpConfig(enabled=self.config.DEFAULTS.INTERFACES_DEFAULT_CDP_ENABLED)
 
 
-    @property
+    @functools.cached_property
     def lldp(self) -> Union[InterfaceLldpConfig, None]:
         lldp_transmit_candidates = self.re_search_children(regex=self._lldp_transmit_regex)
         no_lldp_transmit_candidates = self.re_search_children(regex=self._no_lldp_transmit_regex)
@@ -121,37 +171,37 @@ class IosInterfaceParser(BaseConfigLine):
             self.logger.debug("Platform default for LLDP not set.")
             return None
 
-    @property
+    @functools.cached_property
     def mtu(self) -> Union[int, None]:
         candidates = self.re_search_children(regex=self._mtu_regex, group=1)
         return self.first_candidate_or_none(candidates=candidates, wanted_type=int)
 
-    @property
+    @functools.cached_property
     def ip_mtu(self) -> Union[int, None]:
         candidates = self.re_search_children(regex=self._ip_mtu_regex, group=1)
         return self.first_candidate_or_none(candidates=candidates, wanted_type=int)
 
-    @property
+    @functools.cached_property
     def bandwidth(self) -> Union[int, None]:
         candidates = self.re_search_children(regex=self._bandwidth_regex, group=1)
         return self.first_candidate_or_none(candidates=candidates, wanted_type=int)
 
-    @property
+    @functools.cached_property
     def delay(self) -> Union[int, None]:
         candidates = self.re_search_children(regex=self._delay_regex, group=1)
         return self.first_candidate_or_none(candidates=candidates, wanted_type=int)
 
-    @property
+    @functools.cached_property
     def load_interval(self) -> Union[int, None]:
         candidates = self.re_search_children(regex=self._load_interval_regex, group=1)
         return self.first_candidate_or_none(candidates=candidates, wanted_type=int)
 
-    @property
+    @functools.cached_property
     def vrf(self) -> Union[str, None]:
         candidates = self.re_search_children(regex=self._vrf_regex, group=1)
         return self.first_candidate_or_none(candidates=candidates)
 
-    @property
+    @functools.cached_property
     def ipv4_addresses(self) -> Union[InterfaceIPv4Container, None]:
         candidates = self.re_search_children(regex=self._ipv4_addr_regex, group='ALL')
         if len(candidates) == 0:
@@ -161,8 +211,158 @@ class IosInterfaceParser(BaseConfigLine):
             candidates = [{'address': f"{x['address']}/{x['mask']}", 'secondary': x['secondary']} for x in candidates]
             return InterfaceIPv4Container(addresses=[InterfaceIPv4Address(**x) for x in candidates])
 
-    @property
-    @functools.lru_cache()
+    @functools.cached_property
+    def hsrp(self):
+        candidates = self.re_search_children(regex="^\s+standby")
+        if not len(candidates):
+            return None
+        data = InterfaceHsrp(version=1)
+        version = self.first_candidate_or_none(
+            candidates=self.re_search_children(regex=self._hsrp_version_regex, group='version'),
+            wanted_type=int
+        )
+        if version is not None:
+            data.version = version
+        ip_candidates = [self._val_to_bool(entry=x, keys=['secondary']) for x in self.re_search_children(regex=self._hsrp_ipv4_regex, group="ALL")]
+        # print(f"{ip_candidates=}")
+        priority_candidates = self.re_search_children(regex=self._hsrp_priority_regex, group="ALL")
+        # print(f"{priority_candidates=}")
+        preemtion_candidates = [self._val_to_bool(entry=x, keys=['preemption']) for x in self.re_search_children(regex=self._hsrp_preemption_regex, group="ALL")]
+        # print(f"{preemtion_candidates=}")
+        timers_candidates = [self._val_to_bool(entry=x, keys=['milliseconds']) for x in self.re_search_children(regex=self._hsrp_timers_regex, group="ALL")]
+        # print(f"{timers_candidates=}")
+        track_candidates = self.re_search_children(regex=self._hsrp_track_regex, group="ALL")
+        # print(f"{track_candidates=}")
+        authentication_candidates = self.re_search_children_multipattern(regexes=self._hsrp_authentication_regexes, group="ALL")
+        # print(f"{authentication_candidates=}")
+        name_candidates = self.re_search_children(regex=self._hsrp_name_regex, group="ALL")
+        # print(f"{name_candidates=}")
+
+
+        # Get list of all group_ids
+        group_ids = set()
+        for candidates in [
+            ip_candidates, priority_candidates, preemtion_candidates, timers_candidates, track_candidates,
+            authentication_candidates, name_candidates
+        ]:
+            group_ids = group_ids | set([x['group_id'] for x in candidates])
+        group_ids = sorted(list(group_ids), key=lambda x: int(x))
+
+        # Populate Group Models
+        for group_id in group_ids:
+            group = InterfaceHsrpGroup(group_id=group_id)
+            for c in [x for x in ip_candidates if x['group_id'] == group_id]:
+                if group.ipv4 is None:
+                    group.ipv4 = []
+                include_keys = {k:v for k,v in c.items() if k in HsrpIpv4Address.__fields__.keys()}
+                group.ipv4.append(HsrpIpv4Address.parse_obj({k:v for k,v in c.items() if k in include_keys }))
+            # Priority
+            for c in [x for x in priority_candidates if x['group_id'] == group_id]:
+                group.priority = c['priority']
+            # Preemption
+            for c in [x for x in preemtion_candidates if x['group_id'] == group_id]:
+                group.preemption = c['preemption']
+            # Timers
+            for c in [x for x in timers_candidates if x['group_id'] == group_id]:
+                include_keys = {k:v for k,v in c.items() if k in HsrpTimers.__fields__.keys()}
+                group.timers = HsrpTimers.parse_obj({k:v for k,v in c.items() if k in include_keys})
+            # Tracks
+            for c in [x for x in track_candidates if x['group_id'] == group_id]:
+                include_keys = {k:v for k,v in c.items() if k in HsrpTrack.__fields__.keys()}
+                if group.tracks is None:
+                    group.tracks = []
+                group.tracks.append(HsrpTrack.parse_obj({k:v for k,v in c.items() if k in include_keys and v is not None}))
+            # Authentication
+            for c in [x for x in authentication_candidates if x['group_id'] == group_id]:
+                authentication = None
+                if c['method'] is None:
+                    c['method'] = 'text'
+                if c['method'] in ['text', 'md5']:
+                    include_keys = {k:v for k,v in c.items() if k in KeyBase.__fields__.keys()}
+                    key = KeyBase.parse_obj({k:v for k,v in c.items() if k in include_keys and v is not None})
+                    authentication = HsrpAuthentication(method=c['method'], key=key)
+                elif c['method'] == 'key-chain':
+                    authentication = HsrpAuthentication(method=c['method'], keychain=c['keychain'])
+                group.authentication = authentication
+            # Name
+            for c in [x for x in name_candidates if x['group_id'] == group_id]:
+                group.name = c['name']
+
+
+
+
+
+            if data.groups is None:
+                data.groups = []
+            data.groups.append(group)
+        data = data.copy()
+        return data
+
+    @functools.cached_property
+    def switchport_mode(self):
+        candidates = self.re_search_children(regex=self._switchport_mode_regex, group='switchport_mode')
+        return self.first_candidate_or_none(candidates=candidates)
+
+    @functools.cached_property
+    def switchport_negotiation(self) -> bool:
+        """
+        Returns boolean representation whether negotiation (such as DTP) is enabled (True) or disabled (False)
+        Returns: bool
+
+        """
+        candidates = self.re_search_children(regex=self._switchport_nonegotiate_regex)
+        if self.first_candidate_or_none(candidates=candidates) is None:
+            return True # Negotiation is NOT disabled
+        else:
+            return False # Negotiation is disabled
+
+
+    @functools.cached_property
+    def access_vlan(self) -> Union[int, None]:
+        candidates = self.re_search_children(regex=self._access_vlan_regex, group='access_vlan')
+        return self.first_candidate_or_none(candidates=candidates, wanted_type=int)
+
+    @functools.cached_property
+    def voice_vlan(self) -> Union[int, None]:
+        candidates = self.re_search_children(regex=self._voice_vlan_regex, group='voice_vlan')
+        return self.first_candidate_or_none(candidates=candidates, wanted_type=int)
+
+    @functools.cached_property
+    def trunk_allowed_vlans(self) -> Union[List[int], Literal['all', 'none'], None]:
+        candidates = self.re_search_children(regex=self._trunk_allowed_vlans_regex, group='allowed_vlans')
+        print(candidates)
+        allowed_vlans = None
+        if not len(candidates):
+            pass
+        else:
+            if len(candidates) == 1:
+                if candidates[0] in ['all', 'none']:
+                    return candidates[0]
+            allowed_vlans = []
+            for candidate in candidates:
+                allowed_vlans.extend(candidate.split(','))
+            allowed_vlans = expand_vlan_range(vlan_range=allowed_vlans)
+        return allowed_vlans
+
+    @functools.cached_property
+    def proxy_arp_enabled(self) -> bool:
+        candidates = self.re_search_children(regex=self._proxy_arp_regex, group='ALL')
+        candidate = self.first_candidate_or_none(candidates=candidates)
+
+        if candidate is not None:
+            candidate = self._val_to_bool(entry=candidate, keys=['no'])
+            if candidate['no'] is True:
+                # no ip proxy-arp
+                return False
+            elif candidate['no'] is False:
+                # ip proxy-arp
+                return True
+        else:
+            self.logger.debug(msg=f"Interface {self.name}: Using global value for Proxy ARP: {self.config.proxy_arp_enabled}")
+            # If not specified, return global value
+            return self.config.proxy_arp_enabled
+
+    @functools.cached_property
     def ospf(self) -> Union[InterfaceOspfConfig, None]:
         data = {}
         process_candidates = self.first_candidate_or_none(self.re_search_children(regex=self._ospf_process_regex, group='ALL'))
@@ -213,8 +413,7 @@ class IosInterfaceParser(BaseConfigLine):
             return InterfaceOspfConfig(**data)
 
 
-    @property
-    @functools.lru_cache()
+    @functools.cached_property
     def isis(self):
         # TODO: Complete
         data = {}

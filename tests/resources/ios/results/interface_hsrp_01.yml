@@ -1,0 +1,50 @@
+protocol: hsrp
+version: 2
+groups:
+  - name: Hrsp-Group-1
+    group_id: 1
+    ipv4:
+      - address: 192.168.1.1
+        secondary: false
+      - address: 192.168.10.1
+        secondary: true
+    priority: 120
+    preemption: true
+    timers:
+      hello: 1
+      hold: 3
+      milliseconds: false
+    authentication:
+      method: text
+      key:
+        value: PasswordPlainText
+    tracks:
+      - track_id: 1
+        action: shutdown
+      - track_id: 10
+        action: decrement
+        decrement_value: 20
+  - group_id: 100
+    ipv4:
+      - address: 192.168.100.1
+        secondary: false
+    priority: 150
+    preemption: true
+    timers:
+      hello: 100
+      hold: 300
+      milliseconds: true
+    authentication:
+      method: md5
+      key:
+        value: SecretPasswordMD5
+        encryption_type: 0
+  - group_id: 101
+    authentication:
+      method: text
+      key:
+        value: PasswordPlainText
+  - group_id: 102
+    authentication:
+      method: key-chain
+      keychain: KC-HSRP

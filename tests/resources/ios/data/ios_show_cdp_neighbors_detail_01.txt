@@ -1,0 +1,209 @@
+-------------------------
+Device ID: TS_SP-lab-2
+Entry address(es):
+  IP address: 10.8.1.58
+Platform: cisco 2621XM,  Capabilities: Router
+Interface: GigabitEthernet0/4,  Port ID (outgoing port): FastEthernet0/0
+Holdtime : 134 sec
+
+Version :
+Cisco Internetwork Operating System Software
+IOS (tm) C2600 Software (C2600-IO3-M), Version 12.3(20), RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2006 by cisco Systems, Inc.
+Compiled Tue 08-Aug-06 20:50 by kesnyder
+
+advertisement version: 2
+Duplex: full
+Power Available TLV:
+
+    Power request id: 0, Power management id: 0, Power available: 0, Power management level: 0
+Management address(es):
+
+-------------------------
+Device ID: AQ-TS-RACK-1
+Entry address(es):
+  IP address: 10.8.1.48
+Platform: cisco 2511,  Capabilities: Router
+Interface: GigabitEthernet0/6,  Port ID (outgoing port): Ethernet0
+Holdtime : 130 sec
+
+Version :
+Cisco Internetwork Operating System Software
+IOS (tm) 2500 Software (C2500-IX-L), Version 12.2(24b), RELEASE SOFTWARE (fc1)
+Copyright (c) 1986-2004 by cisco Systems, Inc.
+Compiled Fri 23-Jul-04 20:30 by pwade
+
+advertisement version: 2
+Duplex: half
+Power Available TLV:
+
+    Power request id: 0, Power management id: 0, Power available: 0, Power management level: 0
+Management address(es):
+
+-------------------------
+Device ID: AQ-TS-RACK-4
+Entry address(es):
+  IP address: 10.8.1.41
+Platform: cisco 2511,  Capabilities: Router
+Interface: GigabitEthernet0/7,  Port ID (outgoing port): Ethernet0
+Holdtime : 174 sec
+
+Version :
+Cisco Internetwork Operating System Software
+IOS (tm) 2500 Software (C2500-I-L), Version 12.0(9), RELEASE SOFTWARE (fc1)
+Copyright (c) 1986-2000 by cisco Systems, Inc.
+Compiled Mon 24-Jan-00 21:19 by bettyl
+
+advertisement version: 1
+Power Available TLV:
+
+    Power request id: 0, Power management id: 0, Power available: 0, Power management level: 0
+Management address(es):
+
+-------------------------
+Device ID: CZ-OF1-SW-LAB10.alef.lab
+Entry address(es):
+  IP address: 10.8.8.3
+Platform: cisco WS-C2960X-48TS-L,  Capabilities: Switch IGMP
+Interface: GigabitEthernet0/40,  Port ID (outgoing port): GigabitEthernet1/0/48
+Holdtime : 154 sec
+
+Version :
+Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(2)E3, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2015 by Cisco Systems, Inc.
+Compiled Wed 26-Aug-15 07:12 by prod_rel_team
+
+advertisement version: 2
+Protocol Hello:  OUI=0x00000C, Protocol ID=0x0112; payload len=27, value=00000000FFFFFFFF010221FF00000000000000562BCE4E00FF0000
+VTP Management Domain: ''
+Native VLAN: 1
+Duplex: full
+Power Available TLV:
+
+    Power request id: 0, Power management id: 1, Power available: 0, Power management level: -1
+Management address(es):
+  IP address: 10.8.8.3
+
+-------------------------
+Device ID: CZ-OF1-SW-AQA02.alef.com
+Entry address(es):
+  IP address: 10.2.1.186
+Platform: cisco WS-C3560-48TS,  Capabilities: Switch IGMP
+Interface: GigabitEthernet0/48,  Port ID (outgoing port): FastEthernet0/46
+Holdtime : 125 sec
+
+Version :
+Cisco IOS Software, C3560 Software (C3560-IPSERVICESK9-M), Version 12.2(55)SE8, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2013 by Cisco Systems, Inc.
+Compiled Wed 26-Jun-13 11:18 by prod_rel_team
+
+advertisement version: 2
+Protocol Hello:  OUI=0x00000C, Protocol ID=0x0112; payload len=27, value=00000000FFFFFFFF010221FF000000000000001E79FDAF80FF0000
+VTP Management Domain: ''
+Native VLAN: 1006
+Duplex: full
+Power Available TLV:
+
+    Power request id: 0, Power management id: 1, Power available: 0, Power management level: -1
+Management address(es):
+  IP address: 10.2.1.186
+
+-------------------------
+Device ID: AQTSR04
+Entry address(es):
+  IP address: 10.8.6.15
+Platform: cisco 2511,  Capabilities: Router
+Interface: GigabitEthernet0/8,  Port ID (outgoing port): Ethernet0
+Holdtime : 136 sec
+
+Version :
+Cisco Internetwork Operating System Software
+IOS (tm) 2500 Software (C2500-IX-L), Version 12.2(26), RELEASE SOFTWARE (fc2)
+Copyright (c) 1986-2004 by cisco Systems, Inc.
+Compiled Sat 31-Jul-04 03:31 by eaarmas
+
+advertisement version: 2
+Duplex: half
+Power Available TLV:
+
+    Power request id: 0, Power management id: 0, Power available: 0, Power management level: 0
+Management address(es):
+
+-------------------------
+Device ID: TS-AQUA-R3
+Entry address(es):
+  IP address: 10.8.1.187
+Platform: cisco 2511,  Capabilities: Router
+Interface: GigabitEthernet0/5,  Port ID (outgoing port): Ethernet0
+Holdtime : 153 sec
+
+Version :
+Cisco Internetwork Operating System Software
+IOS (tm) 2500 Software (C2500-IX-L), Version 12.2(26), RELEASE SOFTWARE (fc2)
+Copyright (c) 1986-2004 by cisco Systems, Inc.
+Compiled Sat 31-Jul-04 03:31 by eaarmas
+
+advertisement version: 2
+Duplex: half
+Power Available TLV:
+
+    Power request id: 0, Power management id: 0, Power available: 0, Power management level: 0
+Management address(es):
+
+-------------------------
+Device ID: CZ-OF1-SW-TRN01.alef0.cz
+Entry address(es):
+  IP address: 10.8.8.1
+  IPv6 address: 2A00:1028:800:2E01:A1EF:100:800:1001  (global unicast)
+  IPv6 address: FE80::FA72:EAFF:FEEA:6D43  (link-local)
+Platform: cisco WS-C3560X-48,  Capabilities: Router Switch IGMP
+Interface: GigabitEthernet0/2,  Port ID (outgoing port): GigabitEthernet0/36
+Holdtime : 161 sec
+
+Version :
+Cisco IOS Software, C3560E Software (C3560E-UNIVERSALK9-M), Version 12.2(58)SE2, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2011 by Cisco Systems, Inc.
+Compiled Thu 21-Jul-11 01:34 by prod_rel_team
+
+advertisement version: 2
+Protocol Hello:  OUI=0x00000C, Protocol ID=0x0112; payload len=27, value=00000000FFFFFFFF01022506000000000000F872EAEA6D00FF0000
+VTP Management Domain: 'alef0'
+Native VLAN: 1
+Duplex: full
+Power Available TLV:
+
+    Power request id: 0, Power management id: 1, Power available: 0, Power management level: -1
+Management address(es):
+  IP address: 10.8.8.1
+
+-------------------------
+Device ID: CZ-OF1-SW-TRN01.alef0.cz
+Entry address(es):
+  IP address: 10.8.8.1
+  IPv6 address: 2A00:1028:800:2E01:A1EF:100:800:1001  (global unicast)
+  IPv6 address: FE80::FA72:EAFF:FEEA:6D43  (link-local)
+Platform: cisco WS-C3560X-48,  Capabilities: Router Switch IGMP
+Interface: GigabitEthernet0/1,  Port ID (outgoing port): GigabitEthernet0/35
+Holdtime : 161 sec
+
+Version :
+Cisco IOS Software, C3560E Software (C3560E-UNIVERSALK9-M), Version 12.2(58)SE2, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2011 by Cisco Systems, Inc.
+Compiled Thu 21-Jul-11 01:34 by prod_rel_team
+
+advertisement version: 2
+Protocol Hello:  OUI=0x00000C, Protocol ID=0x0112; payload len=27, value=00000000FFFFFFFF01022506000000000000F872EAEA6D00FF0000
+VTP Management Domain: 'alef0'
+Native VLAN: 1
+Duplex: full
+Power Available TLV:
+
+    Power request id: 0, Power management id: 1, Power available: 0, Power management level: -1
+Management address(es):
+  IP address: 10.8.8.1
+

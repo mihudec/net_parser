@@ -1,0 +1,18 @@
+interface Vlan1
+ standby version 2
+ standby 1 name Hrsp-Group-1
+ standby 1 ip 192.168.1.1
+ standby 1 ip 192.168.10.1 secondary
+ standby 1 priority 120
+ standby 1 preempt
+ standby 1 timers 1 3
+ standby 1 track 1 shutdown
+ standby 1 track 10 decrement 20
+ standby 1 authentication text PasswordPlainText
+ standby 100 ip 192.168.100.1
+ standby 100 priority 150
+ standby 100 preempt
+ standby 100 timers msec 100 300
+ standby 100 authentication md5 key-string 0 SecretPasswordMD5
+ standby 101 authentication PasswordPlainText
+ standby 102 authentication md5 key-chain KC-HSRP

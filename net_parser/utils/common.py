@@ -25,7 +25,7 @@ def check_path(path: pathlib.Path, logger: logging.Logger) -> pathlib.Path:
     # If we got here, the path syntax is valid, just check if it exists and is file
     if not path.is_file():
         msg = f"File '{path}' not found."
-        logger.error(msg=msg)
+        # logger.error(msg=msg)
         raise FileNotFoundError(msg)
 
     return path

@@ -13,7 +13,7 @@ class BaseConfigLine(object):
     _interface_regex = re.compile(pattern=r"^interface\s(\S+)", flags=re.MULTILINE)
     comment_regex = re.compile(pattern=r"^\S*!", flags=re.MULTILINE)
 
-    def __init__(self, number, text, config, verbosity=3, name="BaseConfigLine"):
+    def __init__(self, number, text, config: 'BaseConfigParser', verbosity=3, name="BaseConfigLine"):
         """
         **This class is not meant to be instantiated directly, but only from BaseConfigParser instance.**
 
@@ -152,7 +152,7 @@ class BaseConfigLine(object):
             return []
         children = self.get_children()
         result = list(filter(lambda x: bool(re.search(pattern=pattern, string=x.text)), children))
-        if group:
+        if group is not None:
             result = [x.re_search(regex=pattern, group=group) for x in result]
         return result
 

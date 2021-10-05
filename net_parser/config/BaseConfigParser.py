@@ -11,6 +11,7 @@ re._MAXCACHE = 1024
 class BaseConfigParser(object):
 
     PATTERN_TYPE = type(re.compile(pattern=""))
+    CONFIG_LINE_CLS = BaseConfigLine
 
     def __init__(self, config: Union[pathlib.Path, List[str], str], verbosity: int = 4, name: str = "BaseConfigParser", **kwargs):
         """
@@ -147,7 +148,7 @@ class BaseConfigParser(object):
             # If indent is higher that preceding line, increase by one
             elif indent_map[i] > indent_map[i-1]:
                 fixed_indent_map.append(fixed_indent_map[-1]+1)
-            # If indent is lower that preceding l
+            # If indent is lower that preceding line
             elif indent_map[i] < indent_map[i-1]:
                 fixed_indent_map.append(fixed_indent_map[-1]-1)
         for i, val in enumerate(fixed_indent_map):
@@ -161,10 +162,7 @@ class BaseConfigParser(object):
         """
         start = timeit.default_timer()
         for number, text in enumerate(self.config_lines_str):
-            if re.match(pattern=r"^interface\s\S+", string=text, flags=re.MULTILINE):
-                self.lines.append(self.INTERFACE_LINE_CLASS(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
-            else:
-                self.lines.append(BaseConfigLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
+            self.lines.append(self.CONFIG_LINE_CLS(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
         for line in self.lines:
             line.type = line.get_type
         self.logger.debug(msg="Created {} ConfigLine objects in {} ms.".format(len(self.lines), (timeit.default_timer()-start)*1000))
@@ -262,10 +260,7 @@ class BaseConfigParser(object):
             if match_result is not None:
                 entry.update(match_result)
             else:
-                if self.minimal_results:
-                    continue
-                else:
-                    entry.update({k: None for k in pattern.groupindex.keys()})
+                entry.update({k: None for k in pattern.groupindex.keys()})
         return entry
 
     def property_autoparse(self, candidate_pattern, patterns):
@@ -307,10 +302,7 @@ class BaseConfigParser(object):
                 if len(updates) == 1:
                     entry.update(updates[0])
                 elif len(updates) == 0:
-                    if self.minimal_results:
-                        continue
-                    else:
-                        entry.update({k: None for k in pattern.groupindex.keys()})
+                    entry.update({k: None for k in pattern.groupindex.keys()})
                 else:
                     self.logger.warning("Multiple possible updates found for Pattern: '{}' on Candidate: '{}'".format(pattern, candidate))
             if return_with_line:
@@ -318,6 +310,16 @@ class BaseConfigParser(object):
             else:
                 entries.append(entry)
         return entries
+
+    def _val_to_bool(self, entry: dict, keys: list):
+        if not isinstance(keys, list):
+            keys = list(keys)
+        for key in keys:
+            if entry[key]:
+                entry[key] = True
+            else:
+                entry[key] = False
+        return entry
 
     def first_candidate_or_none(self, candidates: list, wanted_type=None):
         return first_candidate_or_none(candidates=candidates, logger=self.logger, wanted_type=wanted_type)
