@@ -1,0 +1,11 @@
+ntp authenticate
+ntp authentication-key 1 md5 SuperSecret 0
+ntp trusted-key 1
+ntp source Loopback0
+ntp server vrf MGMT 192.0.2.1 key 1 prefer
+ntp server vrf MGMT 192.0.2.2 key 1
+ntp peer vrf MGMT 192.0.2.10 key 1
+ntp access-group serve-only 1
+ntp access-group query-only 2
+ntp access-group serve 3
+ntp access-group peer 4

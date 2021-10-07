@@ -1,0 +1,26 @@
+params:
+  authenticate: true
+  servers:
+    - server: 192.0.2.1
+      vrf: MGMT
+      key_id: 1
+      prefer: true
+    - server: 192.0.2.2
+      vrf: MGMT
+      key_id: 1
+  peers:
+    - server: 192.0.2.10
+      vrf: MGMT
+      key_id: 1
+  ntp_keys:
+    - key_id: 1
+      encryption_type: 0
+      method: md5
+      value: SuperSecret
+      trusted: true
+  access_groups:
+    serve_only: 1
+    query_only: 2
+    serve: 3
+    peer: 4
+  src_interface: loopback0

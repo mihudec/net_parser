@@ -5,6 +5,7 @@ from tests import BaseNetParserTest
 
 
 from net_models.models.interfaces.L3InterfaceModels import *
+from net_models.models.services.ServerModels import *
 
 from net_parser.config import BaseConfigParser, IosConfigParser, BaseConfigLine
 VERBOSITY = 5
@@ -105,6 +106,7 @@ class TestIosConfigParser(BaseNetParserTest):
 class TestIosInterfaceParser(BaseNetParserTest):
 
     VENDOR = "ios"
+    TEST_CLASS = IosConfigParser
 
     def test_ospf_01(self):
         data_path, results_path = self.get_test_resources(test_name='interface_ospf_01')
@@ -259,6 +261,129 @@ class TestIosInterfaceParser(BaseNetParserTest):
                 config = IosConfigParser(config=test_case['config'])
                 config.parse()
                 print(config.banner)
+                #TODO: Make proper evaluation
+
+    def test_password_encryption(self):
+        test_cases = [
+            {
+                "test_name": "Default",
+                "config": (
+                    "!"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Disabled",
+                "config": (
+                    "no service password-encryption"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Enabled",
+                "config": (
+                    "service password-encryption"
+                ),
+                "result": True
+
+            }
+
+        ]
+        for test_case in test_cases:
+            with self.subTest(msg=test_case['test_name']):
+                config = IosConfigParser(config=test_case['config'])
+                config.parse()
+                want = test_case['result']
+                have = config.password_encryption_enabled
+                print(have)
+                self.assertEqual(want, have)
+
+    def test_pad(self):
+        test_cases = [
+            {
+                "test_name": "Default",
+                "config": (
+                    "!"
+                ),
+                "result": True
+
+            },
+            {
+                "test_name": "Disabled",
+                "config": (
+                    "no service pad"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Enabled",
+                "config": (
+                    "service pad"
+                ),
+                "result": True
+
+            }
+
+        ]
+        for test_case in test_cases:
+            with self.subTest(msg=test_case['test_name']):
+                config = IosConfigParser(config=test_case['config'])
+                config.parse()
+                want = test_case['result']
+                have = config.service_pad_enabled
+                print(have)
+                self.assertEqual(want, have)
+
+    def test_ip_finger(self):
+        test_cases = [
+            {
+                "test_name": "Default",
+                "config": (
+                    "!"
+                ),
+                "result": True
+
+            },
+            {
+                "test_name": "Disabled",
+                "config": (
+                    "no ip finger"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Enabled",
+                "config": (
+                    "ip finger"
+                ),
+                "result": True
+
+            }
+
+        ]
+        for test_case in test_cases:
+            with self.subTest(msg=test_case['test_name']):
+                config = IosConfigParser(config=test_case['config'])
+                config.parse()
+                want = test_case['result']
+                have = config.ip_finger_enabled
+                print(have)
+                self.assertEqual(want, have)
+
+
+    def test_ntp(self):
+        data_path, results_path = self.get_test_resources(test_name='ntp-01')
+        config = self.TEST_CLASS(config=data_path, verbosity=VERBOSITY)
+        config.parse()
+        want = self.load_resource_yaml(path=results_path)
+        have = config.ntp
+        print(have.yaml(exclude_none=True))
+        # TODO: Make proper test
+
 
 class TestIosAaaParser(BaseNetParserTest):
 
