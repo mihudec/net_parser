@@ -8,7 +8,7 @@ def load_requirements():
     requirements = []
     REQS_PATH = pathlib.Path(__file__).resolve().parent.joinpath('requirements.txt')
     if REQS_PATH.exists() and REQS_PATH.is_file():
-        requirements = [x for x in REQS_PATH.read_text().splitlines() if (len(x) and not r.startswith("#"))]
+        requirements = [x for x in REQS_PATH.read_text().splitlines() if (len(x) and not x.startswith("#"))]
     return requirements
 
 
