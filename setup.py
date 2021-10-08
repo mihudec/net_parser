@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import pathlib
 
 
-VERSION = "0.1.1"
+VERSION = "0.1.13"
 
 def load_requirements():
     requirements = []
