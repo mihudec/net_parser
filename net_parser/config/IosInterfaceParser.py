@@ -1,6 +1,7 @@
 import functools
 import re
 from .IosSectionParsers import IosConfigLine
+from net_models.models.interfaces.InterfaceCommon import *
 from net_models.models.interfaces.InterfaceModels import *
 from net_models.models.interfaces.L2InterfaceModels import *
 from net_models.models.interfaces.L3InterfaceModels import *
@@ -10,6 +11,8 @@ from net_models.validators import expand_vlan_range
 from typing import (
     Union
 )
+
+from net_parser.utils import compile_regex, re_search, re_search_lines, re_filter_lines
 
 INTERFACE_SECTION_REGEX = re.compile(pattern=r'^interface \S+$', flags=re.MULTILINE)
 
@@ -73,11 +76,20 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
 
     _proxy_arp_regex = re.compile(pattern=r"^ (?:(?P<no>no) )?ip proxy-arp$", flags=re.MULTILINE)
 
+    _service_policy_regex = re.compile(pattern=r"^ service-policy (?P<direction>input|output) (?P<name>\S+$)", flags=re.MULTILINE)
+
 
 
 
     def __init__(self, number: int, text: str, config, verbosity: int = 4):
         super().__init__(number=number, text=text, config=config, verbosity=verbosity, name="IosInterfaceLine")
+
+    @property
+    def get_type(self):
+        types = super().get_type
+        types.append('interface')
+        return types
+
 
     @functools.cached_property
     def name(self) -> Union[str, None]:
@@ -202,6 +214,17 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         return self.first_candidate_or_none(candidates=candidates)
 
     @functools.cached_property
+    def service_policy(self) -> Union[InterfaceServicePolicy, None]:
+        candidates = self.re_search_children(regex=self._service_policy_regex, group='ALL')
+        if len(candidates) == 0:
+            return None
+
+        data = {x['direction']: x['name'] for x in candidates}
+        model = InterfaceServicePolicy.parse_obj(data)
+        return model
+
+
+    @functools.cached_property
     def ipv4_addresses(self) -> Union[InterfaceIPv4Container, None]:
         candidates = self.re_search_children(regex=self._ipv4_addr_regex, group='ALL')
         if len(candidates) == 0:
@@ -213,29 +236,30 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
 
     @functools.cached_property
     def hsrp(self):
-        candidates = self.re_search_children(regex="^\s+standby")
-        if not len(candidates):
+        unprocessed_lines = self.re_search_children(regex=self.compile_regex(pattern=r"^ standby .*"))
+        if not len(unprocessed_lines):
             return None
         data = InterfaceHsrp(version=1)
-        version = self.first_candidate_or_none(
-            candidates=self.re_search_children(regex=self._hsrp_version_regex, group='version'),
-            wanted_type=int
-        )
+        version, unprocessed_lines = re_filter_lines(lines=unprocessed_lines, regex=self._hsrp_version_regex, group='version', pop_matches=True)
+        version = self.first_candidate_or_none(candidates=version, wanted_type=int)
         if version is not None:
             data.version = version
-        ip_candidates = [self._val_to_bool(entry=x, keys=['secondary']) for x in self.re_search_children(regex=self._hsrp_ipv4_regex, group="ALL")]
+        ip_candidates, unprocessed_lines = re_filter_lines(lines=unprocessed_lines, regex=self._hsrp_ipv4_regex, group='ALL', pop_matches=True)
+        ip_candidates = [self._val_to_bool(entry=x, keys=['secondary']) for x in ip_candidates]
         # print(f"{ip_candidates=}")
-        priority_candidates = self.re_search_children(regex=self._hsrp_priority_regex, group="ALL")
+        priority_candidates, unprocessed_lines = re_filter_lines(lines=unprocessed_lines, regex=self._hsrp_priority_regex, group="ALL")
         # print(f"{priority_candidates=}")
-        preemtion_candidates = [self._val_to_bool(entry=x, keys=['preemption']) for x in self.re_search_children(regex=self._hsrp_preemption_regex, group="ALL")]
+        preemtion_candidates, unprocessed_lines = re_filter_lines(lines=unprocessed_lines, regex=self._hsrp_preemption_regex, group="ALL")
+        preemtion_candidates = [self._val_to_bool(entry=x, keys=['preemption']) for x in preemtion_candidates]
         # print(f"{preemtion_candidates=}")
-        timers_candidates = [self._val_to_bool(entry=x, keys=['milliseconds']) for x in self.re_search_children(regex=self._hsrp_timers_regex, group="ALL")]
+        timers_candidates, unprocessed_lines = re_filter_lines(lines=unprocessed_lines, regex=self._hsrp_timers_regex, group="ALL")
+        timers_candidates = [self._val_to_bool(entry=x, keys=['milliseconds']) for x in timers_candidates]
         # print(f"{timers_candidates=}")
-        track_candidates = self.re_search_children(regex=self._hsrp_track_regex, group="ALL")
+        track_candidates, unprocessed_lines = re_filter_lines(lines=unprocessed_lines, regex=self._hsrp_track_regex, group="ALL")
         # print(f"{track_candidates=}")
         authentication_candidates = self.re_search_children_multipattern(regexes=self._hsrp_authentication_regexes, group="ALL")
         # print(f"{authentication_candidates=}")
-        name_candidates = self.re_search_children(regex=self._hsrp_name_regex, group="ALL")
+        name_candidates, unprocessed_lines = re_filter_lines(lines=unprocessed_lines, regex=self._hsrp_name_regex, group="ALL")
         # print(f"{name_candidates=}")
 
 
@@ -287,14 +311,13 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
             # Name
             for c in [x for x in name_candidates if x['group_id'] == group_id]:
                 group.name = c['name']
-
-
-
-
-
             if data.groups is None:
                 data.groups = []
             data.groups.append(group)
+
+        if len(unprocessed_lines):
+            pass
+            # data.extra_config = [x.text for x in unprocessed_lines]
         data = data.copy()
         return data
 
@@ -480,6 +503,8 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         if self.mtu is not None:
             model.mtu = self.mtu
 
+        if self.service_policy is not None:
+            model.service_policy = self.service_policy
 
 
         if self.ipv4_addresses is not None:
@@ -489,12 +514,16 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         if self.ip_mtu is not None:
             model.l3_port.ip_mtu = self.ip_mtu
 
+
         # Dynamic Routing Protocols
         if self.ospf is not None:
             model.l3_port.ospf = self.ospf
 
         if self.isis is not None:
             model.l3_port.isis = self.isis
+
+        if self.hsrp is not None:
+            model.l3_port.hsrp = self.hsrp
 
 
         return model

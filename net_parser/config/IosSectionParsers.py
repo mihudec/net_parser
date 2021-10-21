@@ -11,6 +11,7 @@ from net_models.models.BaseModels.SharedModels import VRFAddressFamily, VRFModel
 from net_models.models.services.cisco_ios.IosLineModels import *
 from net_models.models.services.cisco_ios.AaaMethods import *
 
+from net_parser.utils import re_search
 from net_parser.config import BaseConfigLine
 
 AAA_SECTION_REGEX = re.compile(pattern=r'^aaa \S+.*$', flags=re.MULTILINE)
@@ -18,8 +19,12 @@ VRF_SECTION_REGEX = re.compile(pattern=r'^(?:ip )?vrf definition \S+.*$', flags=
 LOGGING_SECTION_REGEX = re.compile(pattern=r'^logging \S+.*$', flags=re.MULTILINE)
 LINE_SECTION_REGEX = re.compile(pattern=r'^line .*$')
 
+
+
 class IosConfigLine(BaseConfigLine):
     _registry = {}
+
+    comment_regex = re.compile(pattern=r"^\s*!.*", flags=re.MULTILINE)
 
     def __init_subclass__(cls, regex: re.Pattern = None, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -122,7 +127,7 @@ class IosVrfDefinitionParser(IosConfigLine, regex=VRF_SECTION_REGEX):
 
 
 
-class IosLoggingParser(IosConfigLine, regex=LOGGING_SECTION_REGEX):
+class IosLoggingLine(IosConfigLine, regex=LOGGING_SECTION_REGEX):
 
     def __init__(self, number: int, text: str, config, verbosity: int = 4):
         super().__init__(number=number, text=text, config=config, verbosity=verbosity, name="IosLoggingLine")
@@ -156,7 +161,7 @@ class IosLineParser(IosConfigLine, regex=LINE_SECTION_REGEX):
     @functools.cached_property
     def get_type(self):
         types = super().get_type
-        types.append('line')
+        types.append('management_line')
         return types
 
     @functools.cached_property
@@ -273,7 +278,7 @@ class IosLineParser(IosConfigLine, regex=LINE_SECTION_REGEX):
 
     @functools.cached_property
     def aaa(self) -> IosLineAaaConfig:
-        #TODO: Add accounting
+        # TODO: Add accounting
         # Authentication
         authentication_candidates = self.re_search_children(regex=self._authentication_regex, group='authentication')
         authentication = self.first_candidate_or_none(candidates=authentication_candidates)

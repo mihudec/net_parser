@@ -1,0 +1,12 @@
+logging history debugging
+logging alarm informational
+logging trap debugging
+logging origin-id hostname
+logging source-interface Loopback0
+logging source-interface Loopback1 vrf Management
+logging host 192.0.2.1
+logging host 192.0.2.2 vrf Management
+logging host 192.0.2.3 vrf Management transport tcp port 1514
+logging userinfo
+logging buffered 10000000
+logging persistent size 6400000 filesize 512000

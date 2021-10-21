@@ -8,7 +8,7 @@ from net_models.models.services.cisco_ios.AaaMethods import *
 
 from net_parser.config import (
     BaseConfigParser, IosConfigParser, BaseConfigLine, IosConfigLine,
-    IosVrfDefinitionParser, IosInterfaceParser, IosLoggingParser, IosAaaParser,
+    IosVrfDefinitionParser, IosInterfaceParser, IosLoggingLine, IosAaaParser,
     IosLineParser
 )
 
@@ -26,7 +26,7 @@ class TestIosConfigLine(BaseNetParserTest):
             "interface Vlan1": IosInterfaceParser,
             "vrf definition TEST": IosVrfDefinitionParser,
             "ip vrf definition TEST": IosVrfDefinitionParser,
-            "logging host 192.0.2.1": IosLoggingParser,
+            "logging host 192.0.2.1": IosLoggingLine,
             "aaa authentication login default local": IosAaaParser
 
         }

@@ -1,10 +1,12 @@
 import pathlib
 import unittest
-from net_parser.utils.common import check_path, load_text
+from net_parser.utils.common import (check_path, load_text, re_search_lines, raw_match_lines)
 from net_parser.utils.get_logger import get_logger
 from net_parser.exceptions import *
 
-from tests import RESOURCES_DIR
+from net_parser.config import BaseConfigParser
+
+from tests import RESOURCES_DIR, BaseNetParserTest
 
 TEST_LOGGER = get_logger(name="TEST-LOGGER", verbosity=5)
 
@@ -95,6 +97,34 @@ class TestLoadText(unittest.TestCase):
                 obj=pathlib.Path("nonexistent\path"),
                 logger=TEST_LOGGER
             )
+
+
+
+class CommonUtilsTest(unittest.TestCase):
+
+    SAMPLE_CONFIG = BaseConfigParser(config=RESOURCES_DIR.joinpath('ios').joinpath('data').joinpath('sample_config_01.txt'))
+    SAMPLE_CONFIG.parse()
+
+
+class TestReSearchLines(CommonUtilsTest):
+
+    def test_re_search_lines(self):
+
+        lines = re_search_lines(lines=self.SAMPLE_CONFIG.lines, regex=r"interface Vlan1")
+        want = [x for x in self.SAMPLE_CONFIG.lines if x.text == "interface Vlan1"][0]
+        have = lines[0]
+        self.assertTrue(want is have)
+
+
+class TestRawMatchLines(CommonUtilsTest):
+
+    def test_raw_match_lines(self):
+
+        lines = raw_match_lines(lines=self.SAMPLE_CONFIG.lines, text=r"interface Vlan1")
+        want = "interface Vlan1"
+        have = lines[0].text
+        self.assertEqual(want, have)
+
 
 if __name__ == '__main__':
     unittest.main()

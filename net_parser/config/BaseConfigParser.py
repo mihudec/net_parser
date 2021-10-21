@@ -2,7 +2,7 @@ import pathlib
 import re
 import timeit
 from typing import Union, List
-from net_parser.utils import get_logger, load_text, first_candidate_or_none
+from net_parser.utils import get_logger, load_text, first_candidate_or_none, compile_regex, match_to_dict, property_autoparse
 from net_parser.config import BaseConfigLine
 
 re._MAXCACHE = 1024
@@ -63,6 +63,16 @@ class BaseConfigParser(object):
         self.logger = get_logger(name=name, verbosity=verbosity)
         self._config = config
         self.lines = []
+
+
+    def __iter__(self):
+        return iter(self.lines)
+
+    def __repr__(self):
+        return f"[BaseConfigParser - {len(self.lines)} lines]"
+
+    def __str__(self):
+        return '\n'.join(map(lambda x: x.text, self.lines))
 
     def load_config(self) -> List[str]:
         raw_lines = load_text(obj=self._config, logger=self.logger)
@@ -242,46 +252,10 @@ class BaseConfigParser(object):
         return section
 
     def match_to_dict(self, line, patterns):
-        """
-
-        Args:
-            line: Instance of `BaseConfigLine` object
-            patterns: List of compiled `re` patterns
-            minimal_result: Bool, if True, omits keys with value `None`
-
-        Returns:
-            dict: Dictionary containing named groups across all provided patterns
-
-        """
-        entry = {}
-
-        for pattern in patterns:
-            match_result = line.re_search(regex=pattern, group="ALL")
-            if match_result is not None:
-                entry.update(match_result)
-            else:
-                entry.update({k: None for k in pattern.groupindex.keys()})
-        return entry
+        return match_to_dict(line=line, regexes=patterns)
 
     def property_autoparse(self, candidate_pattern, patterns):
-        """
-        Function for searching multiple patterns across all occurrences of lines that matched candidate_pattern
-        Args:
-            candidate_pattern:
-            patterns:
-
-        Returns:
-
-        """
-        properties = None
-        candidates = self.find_objects(regex=candidate_pattern)
-        if len(candidates):
-            properties = []
-        else:
-            return properties
-        for candidate in candidates:
-            properties.append(self.match_to_dict(line=candidate, patterns=patterns))
-        return properties
+        return property_autoparse(lines=self.lines, candidate_pattern=candidate_pattern, regexes=patterns, logger=self.logger, include_candidate=True)
 
     def section_property_autoparse(self, parent, patterns, return_with_line=False):
         entries = None
@@ -310,6 +284,9 @@ class BaseConfigParser(object):
             else:
                 entries.append(entry)
         return entries
+
+    def compile_regex(self, pattern: str, flags=re.MULTILINE):
+        return compile_regex(pattern=pattern, flags=flags, logger=self.logger, raise_exc=True)
 
     def _val_to_bool(self, entry: dict, keys: list):
         if not isinstance(keys, list):

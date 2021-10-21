@@ -4,6 +4,7 @@ import unittest
 from tests import BaseNetParserTest
 
 
+from net_models.models.interfaces.InterfaceCommon import *
 from net_models.models.interfaces.L3InterfaceModels import *
 from net_models.models.services.ServerModels import *
 
@@ -102,6 +103,26 @@ class TestIosConfigParser(BaseNetParserTest):
         self.assertEqual(full_default_config.proxy_arp_enabled, True)
         self.assertEqual(disabled_config.proxy_arp_enabled, False)
 
+    def test_ntp(self):
+        data_path, results_path = self.get_test_resources(test_name='ntp-01')
+        config = self.TEST_CLASS(config=data_path, verbosity=VERBOSITY)
+        config.parse()
+        want = NtpConfig.parse_obj(self.load_resource_yaml(path=results_path))
+        have = config.ntp
+        self.assertEqual(want, have)
+
+
+    def test_logging(self):
+        data_path, results_path = self.get_test_resources(test_name='logging-01')
+        config = self.TEST_CLASS(config=data_path, verbosity=VERBOSITY)
+        config.parse()
+        want = LoggingConfig.parse_obj(self.load_resource_yaml(path=results_path))
+        have = config.logging
+        print(have.yaml(exclude_none=True))
+        self.assertEqual(want, have)
+
+
+
 
 class TestIosInterfaceParser(BaseNetParserTest):
 
@@ -195,6 +216,19 @@ class TestIosInterfaceParser(BaseNetParserTest):
         interface_line = [x for x in config.interface_lines if x.name == "Port-channel1"][0]
         want = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 30, 31, 32, 33, 34, 35, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50]
         have = interface_line.trunk_allowed_vlans
+        self.assertEqual(want, have)
+
+    def test_service_policy(self):
+        config_lines = [
+            "interface Port-channel1",
+            " service-policy input PM-IN",
+            " service-policy output PM-OUT",
+        ]
+        config = IosConfigParser(config=config_lines)
+        config.parse()
+        interface_line = [x for x in config.interface_lines if x.name == "Port-channel1"][0]
+        want = InterfaceServicePolicy(input='PM-IN', output='PM-OUT')
+        have = interface_line.service_policy
         self.assertEqual(want, have)
 
 
@@ -373,16 +407,6 @@ class TestIosInterfaceParser(BaseNetParserTest):
                 have = config.ip_finger_enabled
                 print(have)
                 self.assertEqual(want, have)
-
-
-    def test_ntp(self):
-        data_path, results_path = self.get_test_resources(test_name='ntp-01')
-        config = self.TEST_CLASS(config=data_path, verbosity=VERBOSITY)
-        config.parse()
-        want = self.load_resource_yaml(path=results_path)
-        have = config.ntp
-        print(have.yaml(exclude_none=True))
-        # TODO: Make proper test
 
 
 class TestIosAaaParser(BaseNetParserTest):

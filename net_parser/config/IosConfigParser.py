@@ -12,10 +12,12 @@ from net_models.models.services.ServerModels import *
 from net_models.inventory import HostConfig
 
 
+from net_parser.utils import re_search_lines, re_filter_lines, compile_regex, property_autoparse
 from net_parser.config import (
     BaseConfigParser, BaseConfigLine, IosConfigLine,
-    IosConfigParser, IosInterfaceParser, IosAaaParser, IosVrfDefinitionParser
+    IosConfigParser, IosInterfaceParser, IosAaaParser, IosVrfDefinitionParser, IosLineParser, IosLoggingLine
 )
+
 
 
 @dataclasses.dataclass
@@ -48,10 +50,21 @@ class IosConfigParser(BaseConfigParser):
     _ntp_peer_base_regex = re.compile(pattern=r"^ntp peer(?: vrf \S+)? (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern), flags=re.MULTILINE)
     _ntp_authentication_keys_regex = re.compile(pattern=r"^ntp authentication-key (?P<key_id>\d+) (?P<method>\S+) (?P<value>\S+)(?: (?P<encryption_type>\d+))?", flags=re.MULTILINE)
     _ntp_trusted_key_regex = re.compile(pattern=r"^ntp trusted-key (?P<key_id>\d+)", flags=re.MULTILINE)
+    _ntp_acl_regex = re.compile(pattern=r"^ntp access-group (?P<access_type>\S+) (?P<acl_name>\S+)", flags=re.MULTILINE)
+    _ntp_src_interface_regex = re.compile(pattern=r"^ntp source (?P<src_interface>{})".format(_interface_pattern), flags=re.MULTILINE)
 
-    def __init__(self, config: Union[pathlib.Path, List[str], str], verbosity: int =4, name: str = "BaseConfigParser", **kwargs):
+    _logging_source_interface_regex = re.compile(pattern=r"^logging source-interface (?P<src_interface>{0})(?: vrf (?P<vrf>\S+))?".format(_interface_pattern))
+    _logging_server_base_regex = re.compile(pattern=r"^logging host (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
+    _logging_transport_regex = re.compile(pattern=r"transport (?P<protocol>udp|tcp) port (?P<port>\d+)")
+
+    def __init__(self,
+                 config: Union[pathlib.Path, List[str], str],
+                 verbosity: int =4,
+                 name: str = "BaseConfigParser",
+                 defaults: IosConfigDefaults = None,
+                 **kwargs):
         super().__init__(config=config, verbosity=verbosity, name="IosConfigParser", **kwargs)
-        self.DEFAULTS = IosConfigDefaults()
+        self.DEFAULTS = defaults or IosConfigDefaults()
 
     @functools.cached_property
     def hostname(self):
@@ -65,6 +78,18 @@ class IosConfigParser(BaseConfigParser):
     @property
     def interfaces(self) -> Generator[InterfaceModel, None, None]:
         return (x.to_model() for x in self.interface_lines)
+
+    @functools.cached_property
+    def aaa_lines(self):
+        return (x for x in self.lines if isinstance(x, IosAaaParser))
+
+    @functools.cached_property
+    def management_lines(self):
+        return (x.to_model() for x in self.lines if isinstance(x, IosLineParser))
+
+    @functools.cached_property
+    def logging_lines(self):
+        return (x for x in self.lines if isinstance(x, IosLoggingLine))
 
     def get_interface_line(self, interface_name: str) -> Union[IosInterfaceParser, None]:
         interface_name = normalize_interface_name(interface_name=interface_name, short=False)
@@ -82,35 +107,36 @@ class IosConfigParser(BaseConfigParser):
     @functools.cached_property
     def ntp(self) -> NtpConfig:
         ntp = NtpConfig()
+        ntp_lines = self.find_objects(regex=self.compile_regex(pattern=r"^ntp .*", flags=re.MULTILINE))
+        # Source Interface
+        ntp_src_interface = self.first_candidate_or_none(candidates=re_search_lines(lines=ntp_lines, regex=self._ntp_src_interface_regex, group="src_interface"))
+        if ntp_src_interface is not None:
+            ntp.src_interface = ntp_src_interface
         # Servers Section
         candidate_pattern = self._ntp_server_base_regex
-        patterns = [
-            self._ntp_server_base_regex,
+        regexes = [
             self._source_interface_regex,
             self._source_vrf_regex,
             re.compile("key (?P<key_id>\d+)"),
             re.compile("(?P<prefer>prefer)")
         ]
 
-        ntp_servers = self.property_autoparse(candidate_pattern=candidate_pattern, patterns=patterns)
+        ntp_servers = property_autoparse(lines=ntp_lines, candidate_pattern=candidate_pattern, regexes=regexes, logger=self.logger, include_candidate=True)
         ntp_servers = [self._val_to_bool(entry=x, keys=['prefer']) for x in ntp_servers]
         ntp_servers = [NtpServer.parse_obj(x) for x in ntp_servers]
-        print(ntp_servers)
         if len(ntp_servers):
             ntp.servers = ntp_servers
         # Peers
         candidate_pattern = self._ntp_peer_base_regex
-        patterns = [
-            self._ntp_peer_base_regex,
+        regexes = [
             self._source_interface_regex,
             self._source_vrf_regex,
             re.compile("key (?P<key_id>\d+)"),
             re.compile("(?P<prefer>prefer)")
         ]
-        ntp_peers = self.property_autoparse(candidate_pattern=candidate_pattern, patterns=patterns)
+        ntp_peers = property_autoparse(lines=ntp_lines, candidate_pattern=candidate_pattern, regexes=regexes, logger=self.logger, include_candidate=True)
         ntp_peers = [self._val_to_bool(entry=x, keys=['prefer']) for x in ntp_peers]
         ntp_peers = [NtpServer.parse_obj(x) for x in ntp_peers]
-        print(ntp_peers)
         if len(ntp_peers):
             ntp.peers = ntp_peers
         authenticate = self._globals_check(
@@ -122,18 +148,53 @@ class IosConfigParser(BaseConfigParser):
         )
         ntp.authenticate = authenticate
         # Keys
-        ntp_auth_keys = self.find_objects(regex=self._ntp_authentication_keys_regex, group='ALL')
+        ntp_auth_keys, ntp_lines = re_filter_lines(lines=ntp_lines, regex=self._ntp_authentication_keys_regex, group='ALL')
         ntp_auth_keys = [NtpKey.parse_obj(x) for x in ntp_auth_keys]
-        ntp_trusted_keys = [int(x) for x in self.find_objects(regex=self._ntp_trusted_key_regex, group='key_id')]
+        ntp_trusted_keys = [int(x) for x in re_search_lines(lines=ntp_lines, regex=self._ntp_trusted_key_regex, group='key_id')]
         for ntp_key in ntp_auth_keys:
             if ntp_key.key_id in ntp_trusted_keys:
                 ntp_key.trusted = True
         if len(ntp_auth_keys):
             ntp.ntp_keys = ntp_auth_keys
         # Access Lists
-        # TODO: Finish Access Lists
+        acl_lines, ntp_lines = re_filter_lines(lines=ntp_lines, regex=self._ntp_acl_regex, group="ALL")
+        if len(acl_lines):
+            ntp.access_groups = NtpAccessGroups()
+        for entry in acl_lines:
+            if entry['access_type'] == 'serve-only':
+                ntp.access_groups.serve_only = entry['acl_name']
+            if entry['access_type'] == 'query-only':
+                ntp.access_groups.query_only = entry['acl_name']
+            if entry['access_type'] == 'serve':
+                ntp.access_groups.serve = entry['acl_name']
+            if entry['access_type'] == 'peer':
+                ntp.access_groups.peer = entry['acl_name']
         return ntp
-        
+
+    @functools.cached_property
+    def logging(self) -> LoggingConfig:
+        logging_lines = list(self.logging_lines)
+        if len(logging_lines) == 0:
+            return None
+        logging = LoggingConfig()
+        candidate_pattern = self._logging_server_base_regex
+        regexes = [
+            self._source_vrf_regex,
+            self._source_interface_regex,
+            self._logging_transport_regex
+        ]
+        logging_servers = property_autoparse(lines=logging_lines, candidate_pattern=self._logging_server_base_regex, regexes=regexes, logger=self.logger, include_candidate=True)
+        logging_servers = [{k:v for k,v in x.items() if v is not None} for x in logging_servers]
+        logging_servers = [LoggingServer.parse_obj(x) for x in logging_servers]
+        if len(logging_servers):
+            logging.servers = logging_servers
+        logging_sources = re_search_lines(lines=logging_lines, regex=self._logging_source_interface_regex, group='ALL')
+        logging_sources = [LoggingSource.parse_obj(x) for x in logging_sources]
+        if len(logging_sources):
+            logging.sources = logging_sources
+        return logging
+
+
 
 
     @property
@@ -247,10 +308,22 @@ class IosConfigParser(BaseConfigParser):
 
     def to_model(self):
         model = HostConfig(interfaces={x.name: x for x in self.interfaces})
+
+        vrfs = list(self.vrfs)
+        if len(vrfs):
+            model.vrf_definitions = vrfs
+
+        management_lines = list(self.management_lines)
+        if len(management_lines):
+            model.management_lines = management_lines
+
+        if self.ntp is not None:
+            model.ntp = self.ntp
+
+        if self.logging is not None:
+            model.logging = self.logging
+
         return model
 
     def __repr__(self):
         return f"[IosConfigParser - {len(self.lines)} lines]"
-
-    def __str__(self):
-        return self.__repr__()

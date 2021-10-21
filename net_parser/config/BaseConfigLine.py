@@ -3,15 +3,17 @@ import re
 import json
 import timeit
 import functools
-from net_parser.utils import get_logger, first_candidate_or_none
+
+
+from net_parser.utils import get_logger, first_candidate_or_none, re_search, re_search_lines, re_match, PATTERN_TYPE, compile_regex
 
 
 class BaseConfigLine(object):
 
-    PATTERN_TYPE = type(re.compile(pattern=""))
+    PATTERN_TYPE = PATTERN_TYPE
     _parent_indent_regex = re.compile(pattern=r"[^! ]", flags=re.MULTILINE)
     _interface_regex = re.compile(pattern=r"^interface\s(\S+)", flags=re.MULTILINE)
-    comment_regex = re.compile(pattern=r"^\S*!", flags=re.MULTILINE)
+    comment_regex = re.compile(pattern=r"^\s*!.*", flags=re.MULTILINE)
 
     def __init__(self, number, text, config: 'BaseConfigParser', verbosity=3, name="BaseConfigLine"):
         """
@@ -39,15 +41,16 @@ class BaseConfigLine(object):
     def return_obj(self):
         return self
 
-    def _compile_regex(self, regex, flags=re.MULTILINE):
-        pattern = None
-        try:
-            pattern = re.compile(pattern=regex, flags=flags)
-        except Exception as e:
-            self.logger.error(msg="Error while compiling regex '{}'. Exception: {}".format(regex, repr(e)))
-        return pattern
+    # def __eq__(self, other) -> bool:
+    #     return self.get_line == other.get_line
 
-    def get_children(self):
+    # def __ne__(self, other) -> bool:
+    #     return not self.__eq__(other)
+
+    def compile_regex(self, pattern: str, flags=re.MULTILINE):
+        return compile_regex(pattern=pattern, flags=flags, logger=self.logger, raise_exc=True)
+
+    def get_children(self, max_depth: int = None):
         """
         Return all children lines (all following lines with larger indent)
 
@@ -62,12 +65,15 @@ class BaseConfigLine(object):
             if self.config.lines[line_num].indent <= self.indent:
                 break
             else:
-                children.append(self.config.lines[line_num])
+                if max_depth and self.config.lines[line_num].indent > self.indent + max_depth:
+                    pass
+                else:
+                    children.append(self.config.lines[line_num])
                 line_num += 1
         return children
 
     @property
-    def get_parent(self):
+    def parent(self):
         if not self.is_child:
             self.logger.debug("Line is not a child, therefore has no parent. Line: {}".format(self.text))
             return None
@@ -79,7 +85,6 @@ class BaseConfigLine(object):
                 line = self.config.lines[line_num]
             return line
 
-    @property
     @functools.lru_cache()
     def get_parents(self):
         start = timeit.default_timer()
@@ -88,12 +93,31 @@ class BaseConfigLine(object):
             self.logger.debug("Line is not a child, therefore has no parent. Line: {}".format(self.text))
             pass
         else:
-            parents.insert(0, self.get_parent)
-            while parents[0].get_parent is not None:
-                parents.insert(0, parents[0].get_parent)
+            parents.insert(0, self.parent)
+            while parents[0].parent is not None:
+                parents.insert(0, parents[0].parent)
         stop = timeit.default_timer()
         self.logger.debug("Getting parents of line {} took {} ms".format(str(self), (stop-start)*10e3))
         return parents
+
+    @property
+    def get_path(self):
+        path = [x.text for x in self.get_parents()]
+        if len(path):
+            return path
+        else:
+            return None
+
+    @property
+    def get_line(self):
+        line = None
+        if self.get_path is not None:
+            line = list(self.get_path)
+        else:
+            line = list()
+        line.append(self.text)
+        return line
+
 
     def re_search_children(self, regex, group=None):
         """
@@ -145,16 +169,13 @@ class BaseConfigLine(object):
         """
         pattern = None
         if not isinstance(regex, self.PATTERN_TYPE):
-            pattern = self._compile_regex(regex=regex)
+            pattern = self.compile_regex(pattern=regex)
         else:
             pattern = regex
         if not pattern:
             return []
         children = self.get_children()
-        result = list(filter(lambda x: bool(re.search(pattern=pattern, string=x.text)), children))
-        if group is not None:
-            result = [x.re_search(regex=pattern, group=group) for x in result]
-        return result
+        return re_search_lines(lines=children, regex=regex, group=group)
 
     # TODO: Add Tests
     # TODO: Add Examples
@@ -187,106 +208,10 @@ class BaseConfigLine(object):
         return results
 
     def re_search(self, regex, group=None):
-        """
-        Search config line for given regex
-
-        Args:
-            regex (:obj:`re.Pattern` or ``str``): Regex to search for
-            group (:obj:`str` or ``int``, optional): Return only specific (named or numbered) group of given regex.
-                If set to "ALL", return value will be a dictionary with all named groups of the regex.
-
-        Examples:
-
-            Example::
-
-                # Given the following line stored in `line` variable
-                # " ip address 10.0.0.1 255.255.255"
-                pattern = r"^ ip address (?P<ip>\S+) (?P<mask>\S+)"
-
-                # Basic search
-                result = line.re_search(regex=pattern)
-                print(result)
-                # Returns: " ip address 10.0.0.1 255.255.255"
-
-                # Search for specific group
-                result = line.re_search(regex=pattern, group="ip")
-                print(result)
-                # Returns: "10.0.0.1"
-
-                # Get all named groups
-                result = line.re_search(regex=pattern, group="ALL")
-                print(result)
-                # Returns: {"ip": "10.0.0.1", "mask": "255.255.255"}
-
-
-        Returns:
-            str: String that matched given regex, or, if `group` was provided, returns only specific group.
-
-            Returns ``None`` if regex did not match.
-
-        """
-        pattern = None
-        if not isinstance(regex, self.PATTERN_TYPE):
-            pattern = self._compile_regex(regex=regex)
-        else: 
-            pattern = regex
-
-        if pattern is None:
-            self.logger.warning("Got invalid regex {}".format(regex))
-            return None
-        m = pattern.search(string=self.text)
-        if m:
-            if group is None:
-                return m.group(0)
-            elif isinstance(group, int):
-                if group <= pattern.groups:
-                    return m.group(group)
-                else:
-                    self.logger.error(msg="Given regex '{}' does not contain required group '{}'".format(regex, group))
-                    return None
-            elif isinstance(group, str):
-                if group in pattern.groupindex.keys():
-                    return m.group(group)
-                elif group == "ALL":
-                    return m.groupdict()
-                        
-                else:
-                    self.logger.error(msg="Given regex '{}' does not contain required group '{}'".format(regex, group))
-                    return None
-        else:
-            self.logger.debug(msg="Given regex '{}' did not match.".format(regex))
-            return None
+        return re_search(line=self, regex=regex, group=group)
 
     def re_match(self, regex, group=None):
-        pattern = None
-        if not isinstance(regex, self.PATTERN_TYPE):
-            pattern = self._compile_regex(regex=regex)
-        else:
-            pattern = regex
-
-        if pattern is None:
-            return None
-        m = pattern.match(string=self.text)
-        if m:
-            if group is None:
-                return m.group(0)
-            elif isinstance(group, int):
-                if group <= pattern.groups:
-                    return m.group(group)
-                else:
-                    self.logger.error(msg="Given regex '{}' does not contain required group '{}'".format(regex, group))
-                    return None
-            elif isinstance(group, str):
-                if group in pattern.groupindex.keys():
-                    return m.group(group)
-                elif group == "ALL":
-                    return m.groupdict()
-                else:
-                    self.logger.error(msg="Given regex '{}' does not contain required group '{}'".format(regex, group))
-                    return None
-        else:
-            self.logger.debug(msg="Given regex '{}' did not match.".format(regex))
-            return None
+        return re_match(line=self, regex=regex, group=group)
 
     @property
     def get_type(self):
@@ -313,11 +238,11 @@ class BaseConfigLine(object):
             types.append("parent")
         if self.is_child:
             types.append("child")
-        if self.is_interface:
-            types.append("interface")
-        # if re.match(self.comment_regex, self.text):
-        #     types.append("comment")
         return types
+
+    @functools.cached_property
+    def is_comment(self):
+        return bool(re.match(self.comment_regex, self.text))
 
     @property
     def is_parent(self):
@@ -350,10 +275,6 @@ class BaseConfigLine(object):
         else:
             return False
 
-    @property
-    def is_interface(self):
-        return bool(re.match(self._interface_regex, self.text))
-
     def _val_to_bool(self, entry: dict, keys: list):
         if not isinstance(keys, list):
             keys = list(keys)
@@ -368,7 +289,7 @@ class BaseConfigLine(object):
         return first_candidate_or_none(candidates=candidates, logger=self.logger, wanted_type=wanted_type)
 
     def __str__(self):
-        return "[{} #{} ({}): '{}']".format(self._name, self.number, self.type, self.text)
+        return f"[{self._name} #{self.number}\t({self.get_type}): '{self.text}']"
 
     def __repr__(self):
         return self.__str__()

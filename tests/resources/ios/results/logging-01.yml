@@ -1,0 +1,13 @@
+servers:
+  - server: 192.0.2.1
+  - server: 192.0.2.2
+    vrf: Management
+  - server: 192.0.2.3
+    vrf: Management
+    protocol: tcp
+    port: 1514
+sources:
+  - src_interface: Loopback0
+  - src_interface: Loopback1
+    vrf: Management
+

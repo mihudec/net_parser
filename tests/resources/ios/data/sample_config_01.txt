@@ -1,0 +1,20 @@
+!
+interface Vlan1
+ description Test Interface Vlan1
+ no ip address
+ shutdown
+!
+router bgp 65535
+ bgp router-id 192.0.2.1
+ no bgp default ipv4-unicast
+ bgp log-neighbor-changes
+ neighbor 192.0.2.2 remote-as 65535
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family vpnv4
+  neighbor 192.0.2.2 activate
+ exit-address-family
+ !
+!
