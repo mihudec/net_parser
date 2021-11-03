@@ -1,9 +1,11 @@
 import pathlib
 import re
 import timeit
-from typing import Union, List
+from typing import Union, List, Type
 from net_parser.utils import get_logger, load_text, first_candidate_or_none, compile_regex, match_to_dict, property_autoparse
 from net_parser.config import BaseConfigLine
+
+from net_models.inventory import ConfigDefaults
 
 re._MAXCACHE = 1024
 
@@ -13,7 +15,7 @@ class BaseConfigParser(object):
     PATTERN_TYPE = type(re.compile(pattern=""))
     CONFIG_LINE_CLS = BaseConfigLine
 
-    def __init__(self, config: Union[pathlib.Path, List[str], str], verbosity: int = 4, name: str = "BaseConfigParser", **kwargs):
+    def __init__(self, config: Union[pathlib.Path, List[str], str], verbosity: int = 4, name: str = "BaseConfigParser", defaults: Type[ConfigDefaults] = None, **kwargs):
         """
         Base class for parsing Cisco-like configs
 
@@ -63,6 +65,7 @@ class BaseConfigParser(object):
         self.logger = get_logger(name=name, verbosity=verbosity)
         self._config = config
         self.lines = []
+        self.DEFAULTS = defaults or ConfigDefaults()
 
 
     def __iter__(self):
@@ -112,6 +115,7 @@ class BaseConfigParser(object):
         indent_size = len(line) - len(line.lstrip(" "))
         return indent_size
 
+    # Deprecated
     def _get_clean_config(self, first_line_regex=r"^version \d+\.\d+", last_line_regex=r"^end"):
         self.logger.debug(msg="Cleaning config lines")
         first_regex = re.compile(pattern=first_line_regex, flags=re.MULTILINE)

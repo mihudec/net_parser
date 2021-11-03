@@ -11,6 +11,9 @@ PATTERN_TYPE = type(re.compile(pattern=""))
 
 LOGGER = get_logger(name="CommonLogger", verbosity=4)
 
+EMPTY_LINE_REGEX = re.compile(pattern=r'^\s*$')
+NOT_EMPTY_LINE_REGEX = re.compile(pattern=r'.*\S.*')
+
 def check_path(path: pathlib.Path, logger: logging.Logger) -> pathlib.Path:
     if not isinstance(path, pathlib.Path):
         try:
@@ -38,7 +41,8 @@ def check_path(path: pathlib.Path, logger: logging.Logger) -> pathlib.Path:
     return path
 
 
-def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger, omit_empty_lines: bool = False) -> List[str]:
+def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger = None, omit_empty_lines: bool = False) -> List[str]:
+    logger = logger or LOGGER
     lines = []
     path = None
     # Decide base on type of obj:
@@ -70,11 +74,15 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger, 
             msg = f"Got path to load, but the path does not exist. Path: {obj}"
             logger.critical(msg=msg)
             raise
-    logger.debug(f"Loaded {len(lines)} lines.")
+    all_lines = len(lines)
+    lines = [x.rstrip() for x in lines if not EMPTY_LINE_REGEX.match(x)]
+    empty_lines = all_lines - len(lines)
+    logger.debug(f"Loaded {len(lines)} lines. {empty_lines} were empty.")
     return lines
 
 
-def first_candidate_or_none(candidates: list, logger: logging.Logger, wanted_type=None):
+def first_candidate_or_none(candidates: list, logger: logging.Logger = None, wanted_type=None):
+    logger = logger or LOGGER
     if len(candidates) == 0:
         return None
     elif len(candidates) == 1:

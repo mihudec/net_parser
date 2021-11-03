@@ -301,3 +301,9 @@ class IosLineParser(IosConfigLine, regex=LINE_SECTION_REGEX):
             authorization=authorization
         )
         return model
+
+    def to_model(self):
+        model = IosLineConfig(
+            line_type=self.line_type,
+            line_range=self.line_range,
+        )

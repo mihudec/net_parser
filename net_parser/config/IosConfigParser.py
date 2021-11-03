@@ -1,15 +1,14 @@
-import dataclasses
 import functools
 import re
 import pathlib
 import timeit
-from typing import Union, List, Generator
+from typing import Union, List, Generator, Type
 
 from net_models.validators import normalize_interface_name
 from net_models.models.interfaces.InterfaceModels import InterfaceModel
 from net_models.models import VRFModel
 from net_models.models.services.ServerModels import *
-from net_models.inventory import HostConfig
+from net_models.inventory import HostConfig, ConfigDefaults
 
 
 from net_parser.utils import re_search_lines, re_filter_lines, compile_regex, property_autoparse
@@ -18,14 +17,6 @@ from net_parser.config import (
     IosConfigParser, IosInterfaceParser, IosAaaParser, IosVrfDefinitionParser, IosLineParser, IosLoggingLine
 )
 
-
-
-@dataclasses.dataclass
-class IosConfigDefaults:
-
-    INTERFACES_DEFAULT_NO_SHUTDOWN: bool = None
-    INTERFACES_DEFAULT_CDP_ENABLED: bool = None
-    INTERFACES_DEFAULT_LLDP_ENABLED: bool = None
 
 class IosConfigParser(BaseConfigParser):
 
@@ -61,10 +52,10 @@ class IosConfigParser(BaseConfigParser):
                  config: Union[pathlib.Path, List[str], str],
                  verbosity: int =4,
                  name: str = "BaseConfigParser",
-                 defaults: IosConfigDefaults = None,
+                 defaults: Type[ConfigDefaults] = None,
                  **kwargs):
         super().__init__(config=config, verbosity=verbosity, name="IosConfigParser", **kwargs)
-        self.DEFAULTS = defaults or IosConfigDefaults()
+        self.DEFAULTS = defaults or ConfigDefaults()
 
     @functools.cached_property
     def hostname(self):
