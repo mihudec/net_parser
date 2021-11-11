@@ -99,6 +99,9 @@ class IosConfigParser(BaseConfigParser):
     def ntp(self) -> NtpConfig:
         ntp = NtpConfig()
         ntp_lines = self.find_objects(regex=self.compile_regex(pattern=r"^ntp .*", flags=re.MULTILINE))
+        if not len(ntp_lines):
+            return None
+
         # Source Interface
         ntp_src_interface = self.first_candidate_or_none(candidates=re_search_lines(lines=ntp_lines, regex=self._ntp_src_interface_regex, group="src_interface"))
         if ntp_src_interface is not None:
@@ -113,10 +116,11 @@ class IosConfigParser(BaseConfigParser):
         ]
 
         ntp_servers = property_autoparse(lines=ntp_lines, candidate_pattern=candidate_pattern, regexes=regexes, logger=self.logger, include_candidate=True)
-        ntp_servers = [self._val_to_bool(entry=x, keys=['prefer']) for x in ntp_servers]
-        ntp_servers = [NtpServer.parse_obj(x) for x in ntp_servers]
         if len(ntp_servers):
-            ntp.servers = ntp_servers
+            ntp_servers = [self._val_to_bool(entry=x, keys=['prefer']) for x in ntp_servers]
+            ntp_servers = [NtpServer.parse_obj(x) for x in ntp_servers]
+            if len(ntp_servers):
+                ntp.servers = ntp_servers
         # Peers
         candidate_pattern = self._ntp_peer_base_regex
         regexes = [
@@ -126,10 +130,11 @@ class IosConfigParser(BaseConfigParser):
             re.compile("(?P<prefer>prefer)")
         ]
         ntp_peers = property_autoparse(lines=ntp_lines, candidate_pattern=candidate_pattern, regexes=regexes, logger=self.logger, include_candidate=True)
-        ntp_peers = [self._val_to_bool(entry=x, keys=['prefer']) for x in ntp_peers]
-        ntp_peers = [NtpServer.parse_obj(x) for x in ntp_peers]
         if len(ntp_peers):
-            ntp.peers = ntp_peers
+            ntp_peers = [self._val_to_bool(entry=x, keys=['prefer']) for x in ntp_peers]
+            ntp_peers = [NtpServer.parse_obj(x) for x in ntp_peers]
+            if len(ntp_peers):
+                ntp.peers = ntp_peers
         authenticate = self._globals_check(
             regex=re.compile(
                 pattern=r"^(?:(?P<no>no) )?ntp authenticate$",
@@ -140,13 +145,14 @@ class IosConfigParser(BaseConfigParser):
         ntp.authenticate = authenticate
         # Keys
         ntp_auth_keys, ntp_lines = re_filter_lines(lines=ntp_lines, regex=self._ntp_authentication_keys_regex, group='ALL')
-        ntp_auth_keys = [NtpKey.parse_obj(x) for x in ntp_auth_keys]
-        ntp_trusted_keys = [int(x) for x in re_search_lines(lines=ntp_lines, regex=self._ntp_trusted_key_regex, group='key_id')]
-        for ntp_key in ntp_auth_keys:
-            if ntp_key.key_id in ntp_trusted_keys:
-                ntp_key.trusted = True
         if len(ntp_auth_keys):
-            ntp.ntp_keys = ntp_auth_keys
+            ntp_auth_keys = [NtpKey.parse_obj(x) for x in ntp_auth_keys]
+            ntp_trusted_keys = [int(x) for x in re_search_lines(lines=ntp_lines, regex=self._ntp_trusted_key_regex, group='key_id')]
+            for ntp_key in ntp_auth_keys:
+                if ntp_key.key_id in ntp_trusted_keys:
+                    ntp_key.trusted = True
+            if len(ntp_auth_keys):
+                ntp.ntp_keys = ntp_auth_keys
         # Access Lists
         acl_lines, ntp_lines = re_filter_lines(lines=ntp_lines, regex=self._ntp_acl_regex, group="ALL")
         if len(acl_lines):

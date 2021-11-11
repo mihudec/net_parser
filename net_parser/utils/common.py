@@ -2,7 +2,7 @@ import functools
 import logging
 import pathlib
 import re
-from pydantic.typing import Union, List, Tuple, Type
+from pydantic.typing import Union, List, Tuple, Type, Dict
 
 from net_parser.exceptions import *
 from .get_logger import get_logger
@@ -274,13 +274,11 @@ def re_match(line: 'BaseConfigLine', regex, group=None) -> List[Union[str, dict,
         return None
 
 
-def property_autoparse(lines: List['BaseConfigLine'], candidate_pattern: re.Pattern, regexes: List[re.Pattern], logger: logging.Logger = None, include_candidate: bool = True):
+def property_autoparse(lines: List['BaseConfigLine'], candidate_pattern: re.Pattern, regexes: List[re.Pattern], logger: logging.Logger = None, include_candidate: bool = True) -> List[Dict]:
     logger = logger or LOGGER
-    properties = None
+    properties = []
     candidates = re_search_lines(lines=lines, regex=candidate_pattern)
-    if len(candidates):
-        properties = []
-    else:
+    if not len(candidates):
         return properties
     if include_candidate and candidate_pattern not in regexes:
         regexes.insert(0, candidate_pattern)

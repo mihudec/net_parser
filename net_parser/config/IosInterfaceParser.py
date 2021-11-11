@@ -149,7 +149,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
                 self.logger.debug("Platform default for CDP not set.")
                 return None
             else:
-                self.logger.warning(msg="Using platform default value for interface CDP.")
+                self.logger.debug(msg="Using platform default value for interface CDP.")
                 return InterfaceCdpConfig(enabled=self.config.DEFAULTS.INTERFACES_DEFAULT_CDP_ENABLED)
 
 
@@ -166,7 +166,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         elif len(no_lldp_transmit_candidates):
             data["transmit"] = False
         elif self.config.DEFAULTS.INTERFACES_DEFAULT_LLDP_ENABLED is not None:
-            self.logger.warning(msg="Using platform default value for interface LLDP transmit.")
+            self.logger.debug(msg="Using platform default value for interface LLDP transmit.")
             data["transmit"] = self.config.DEFAULTS.INTERFACES_DEFAULT_LLDP_ENABLED
 
         if len(lldp_receive_candidates):
@@ -174,7 +174,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         elif len(no_lldp_receive_candidates):
             data["receive"] = False
         elif self.config.DEFAULTS.INTERFACES_DEFAULT_LLDP_ENABLED is not None:
-            self.logger.warning(msg="Using platform default value for interface LLDP receive.")
+            self.logger.debug(msg="Using platform default value for interface LLDP receive.")
             data["receive"] = self.config.DEFAULTS.INTERFACES_DEFAULT_LLDP_ENABLED
 
         if any(data.values()):

@@ -98,7 +98,6 @@ class IosVrfDefinitionParser(IosConfigLine, regex=VRF_SECTION_REGEX):
             data.update(af_line.re_search(regex=self._address_family_regex, group="ALL"))
             # Route Targets
             rt_candidates = af_line.re_search_children(regex=self._route_target_regex, group="ALL")
-            print(rt_candidates)
             if len(rt_candidates):
                 data['route_targets'] = rt_candidates
             if not any(data.values()):

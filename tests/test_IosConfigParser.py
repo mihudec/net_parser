@@ -9,6 +9,7 @@ from net_models.models.interfaces.L3InterfaceModels import *
 from net_models.models.services.ServerModels import *
 
 from net_parser.config import BaseConfigParser, IosConfigParser, BaseConfigLine
+from net_models.inventory import ConfigDefaults
 VERBOSITY = 5
 
 class TestIosConfigParserLoading(BaseNetParserTest):
@@ -120,7 +121,6 @@ class TestIosConfigParser(BaseNetParserTest):
         have = config.logging
         print(have.yaml(exclude_none=True))
         self.assertEqual(want, have)
-
 
 
 
