@@ -17,7 +17,7 @@ from net_parser.config import BaseConfigLine
 AAA_SECTION_REGEX = re.compile(pattern=r'^aaa \S+.*$', flags=re.MULTILINE)
 VRF_SECTION_REGEX = re.compile(pattern=r'^(?:ip )?vrf definition \S+.*$', flags=re.MULTILINE)
 LOGGING_SECTION_REGEX = re.compile(pattern=r'^logging \S+.*$', flags=re.MULTILINE)
-LINE_SECTION_REGEX = re.compile(pattern=r'^line .*$')
+LINE_SECTION_REGEX = re.compile(pattern=r'^line [a-z]+ \d+(?: \d+)?$')
 
 
 
@@ -196,8 +196,9 @@ class IosLineParser(IosConfigLine, regex=LINE_SECTION_REGEX):
         data = {}
         for candidate in candidates:
             data[candidate['direction']] = candidate['protocol']
-        model = IosLineTransport.parse_obj(data)
-        return model
+        if len(data):
+            model = IosLineTransport.parse_obj(data)
+            return model
 
     @functools.cached_property
     def has_ssh_enabled(self) -> bool:
@@ -232,7 +233,8 @@ class IosLineParser(IosConfigLine, regex=LINE_SECTION_REGEX):
         for candidate in candidates:
             acl = IosLineAccessClass.parse_obj(candidate)
             acls.append(acl)
-        return acls
+        if len(acls):
+            return acls
 
     @functools.cached_property
     def acls_ipv6(self) -> List[IosLineAccessClass]:
@@ -303,7 +305,14 @@ class IosLineParser(IosConfigLine, regex=LINE_SECTION_REGEX):
         return model
 
     def to_model(self):
-        model = IosLineConfig(
-            line_type=self.line_type,
-            line_range=self.line_range,
-        )
+        mapping = {
+            'line_type': self.line_type,
+            'line_range': self.line_range,
+            'aaa_config': self.aaa,
+            'exec_timeout': self.exec_timeout,
+            'access_classes': self.acls,
+            'transport': self.transport
+        }
+        data = {k:v for k,v in mapping.items() if v is not None}
+        model = IosLineConfig.parse_obj(data)
+        return model

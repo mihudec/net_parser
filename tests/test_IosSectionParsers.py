@@ -240,6 +240,51 @@ class TestIosLineParser(BaseNetParserTest):
                 print(have.yaml(exclude_none=True))
                 self.assertEqual(want, have)
 
+    def test_to_model(self):
+        test_cases = [
+            {
+                "test_name": "Test-Model-01",
+                "config": (
+                    "line vty 0 4\n"
+                    " login authentication TEST\n"
+                    " authorization exec TEST\n"
+                    " authorization commands 15 TEST\n"
+                    " access-class ACL-VTY in vrf-also\n"
+                    " transport input ssh\n"
+                    " transport output none\n"
+                ),
+                "result": IosLineConfig(
+                    line_type='vty',
+                    line_range=[0, 4],
+                    aaa_config=IosLineAaaConfig(
+                        authentication='TEST',
+                        authorization=IosAaaLineAuthorization(
+                            exec='TEST',
+                            commands=[
+                                IosAaaLineCommands(
+                                    name='TEST',
+                                    level=15
+                                )
+                            ]
+                        )
+                    ),
+                    access_classes=[
+                        IosLineAccessClass(name='ACL-VTY', vrf_also=True, direction='in')
+                    ],
+                    transport=IosLineTransport(input='ssh', output='none')
+                )
+            }
+        ]
+        for test_case in test_cases:
+            config = IosConfigParser(config=test_case['config'])
+            config.parse()
+            with self.subTest(msg=f"{test_case['test_name']}"):
+                text_line = test_case['config'].split('\n')[0]
+                line = [x for x in config.lines if x.text == text_line][0]
+                want = test_case['result']
+                have = line.to_model()
+                print(have.yaml(exclude_none=True))
+                self.assertEqual(want, have)
 
 
 del BaseNetParserTest
