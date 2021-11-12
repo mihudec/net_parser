@@ -15,7 +15,7 @@ groups:
       hold: 3
       milliseconds: false
     authentication:
-      method: cdp_text
+      method: text
       key:
         value: PasswordPlainText
     tracks:
@@ -41,7 +41,7 @@ groups:
         encryption_type: 0
   - group_id: 101
     authentication:
-      method: cdp_text
+      method: text
       key:
         value: PasswordPlainText
   - group_id: 102

@@ -184,7 +184,7 @@ def re_search(line: 'BaseConfigLine', regex: re.Pattern, group: str = None):
     logger = line.logger
     regex = assert_is_regex(regex)
 
-    m = regex.search(string=line.cdp_text)
+    m = regex.search(string=line.text)
     if m:
         if group is None:
             return m.group(0)
@@ -233,13 +233,13 @@ def match_to_dict(line: Type['BaseConfigLine'], regexes: List[Type[PATTERN_TYPE]
 
 def re_search_lines(lines: List['BaseConfigLine'], regex: re.Pattern, group: str = None) -> List[Union[str, dict, Type['BaseConfigLine']]]:
     regex = assert_is_regex(regex)
-    result = list(filter(lambda x: bool(regex.search(string=x.cdp_text)), lines))
+    result = list(filter(lambda x: bool(regex.search(string=x.text)), lines))
     if group is not None:
         result = [x.re_search(regex=regex, group=group) for x in result]
     return result
 
 def raw_match_lines(lines: List[Type['BaseConfigLine']], text: str) -> List[Type['BaseConfigLine']]:
-    results = [x for x in lines if x.cdp_text == text]
+    results = [x for x in lines if x.text == text]
     return results
 
 def re_filter_lines(lines: List['BaseConfigLine'], regex: re.Pattern, group: str = None, pop_matches: bool = True) -> Tuple[list, list]:
@@ -257,7 +257,7 @@ def re_match(line: 'BaseConfigLine', regex, group=None) -> List[Union[str, dict,
 
     if regex is None:
         return None
-    m = regex.match(string=line.cdp_text)
+    m = regex.match(string=line.text)
     if m:
         if group is None:
             return m.group(0)

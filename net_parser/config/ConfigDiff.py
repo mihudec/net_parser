@@ -73,13 +73,13 @@ class ConfigDiff:
                 raise TypeError(msg)
 
     def add_line(self, line):
-        return DiffedLine(text=line.cdp_text, action='add')
+        return DiffedLine(text=line.text, action='add')
 
     def remove_line(self, line):
-        return DiffedLine(text=line.cdp_text, action='remove')
+        return DiffedLine(text=line.text, action='remove')
 
     def present_line(self, line):
-        return DiffedLine(text=line.cdp_text, action='present')
+        return DiffedLine(text=line.text, action='present')
 
     def is_ignore_line(self, line: Type[BaseConfigLine], diff_ignore: List[Type[PATTERN_TYPE]] = None) -> bool:
         ignore = False

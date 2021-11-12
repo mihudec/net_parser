@@ -119,7 +119,7 @@ class TestIosLineParser(BaseNetParserTest):
             config.parse()
             with self.subTest(msg=f"{test_case['test_name']}"):
                 text_line = test_case['config'].split('\n')[0]
-                line = [x for x in config.lines if x.cdp_text == text_line][0]
+                line = [x for x in config.lines if x.text == text_line][0]
                 want = test_case['result']
                 have = line.exec_timeout
                 self.assertEqual(want, have)
@@ -150,7 +150,7 @@ class TestIosLineParser(BaseNetParserTest):
             config.parse()
             with self.subTest(msg=f"{test_case['test_name']}"):
                 text_line = test_case['config'].split('\n')[0]
-                line = [x for x in config.lines if x.cdp_text == text_line][0]
+                line = [x for x in config.lines if x.text == text_line][0]
                 want = test_case['result']
                 have = line.transport
                 self.assertEqual(want, have)
@@ -172,7 +172,7 @@ class TestIosLineParser(BaseNetParserTest):
             config.parse()
             with self.subTest(msg=f"{test_case['test_name']}"):
                 text_line = test_case['config'].split('\n')[0]
-                line = [x for x in config.lines if x.cdp_text == text_line][0]
+                line = [x for x in config.lines if x.text == text_line][0]
                 want = test_case['result']
                 have = line.acls
                 self.assertEqual(want, have)
@@ -200,7 +200,7 @@ class TestIosLineParser(BaseNetParserTest):
             config.parse()
             with self.subTest(msg=f"{test_case['test_name']}"):
                 text_line = test_case['config'].split('\n')[0]
-                line = [x for x in config.lines if x.cdp_text == text_line][0]
+                line = [x for x in config.lines if x.text == text_line][0]
                 want = test_case['result']
                 have = line.exec_enabled
                 self.assertEqual(want, have)
@@ -234,7 +234,7 @@ class TestIosLineParser(BaseNetParserTest):
             config.parse()
             with self.subTest(msg=f"{test_case['test_name']}"):
                 text_line = test_case['config'].split('\n')[0]
-                line = [x for x in config.lines if x.cdp_text == text_line][0]
+                line = [x for x in config.lines if x.text == text_line][0]
                 want = test_case['result']
                 have = line.aaa
                 print(have.yaml(exclude_none=True))
@@ -280,7 +280,7 @@ class TestIosLineParser(BaseNetParserTest):
             config.parse()
             with self.subTest(msg=f"{test_case['test_name']}"):
                 text_line = test_case['config'].split('\n')[0]
-                line = [x for x in config.lines if x.cdp_text == text_line][0]
+                line = [x for x in config.lines if x.text == text_line][0]
                 want = test_case['result']
                 have = line.to_model()
                 print(have.yaml(exclude_none=True))

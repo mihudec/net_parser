@@ -35,7 +35,7 @@ class BaseConfigLine(object):
         self.text = text
         self.indent = len(self.text) - len(self.text.lstrip(" "))
         self.type = None
-        # self.logger.debug("Parsing line: #{}: '{}'".format(self.number, self.cdp_text))
+        # self.logger.debug("Parsing line: #{}: '{}'".format(self.number, self.text))
 
 
     def return_obj(self):

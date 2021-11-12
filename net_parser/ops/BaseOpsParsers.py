@@ -137,7 +137,7 @@ class OpsParser(object):
                 setattr(cls, 'commands', commands)
 
     def __new__(cls, *args, **kwargs):
-        text = kwargs.get('cdp_text')
+        text = kwargs.get('text')
         vendor = kwargs.get('vendor')
         command = kwargs.get('command')
         subclass = None

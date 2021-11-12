@@ -250,24 +250,24 @@ class IosConfigParser(BaseConfigParser):
             banner_type = candidate.re_search(regex=self._banner_regex, group='banner_type')
             banner_text = None
             # Determine the stopchar
-            stop_char_occurences = {candidate.cdp_text.count(x):x for x in stop_chars}
+            stop_char_occurences = {candidate.text.count(x):x for x in stop_chars}
             stop_char = stop_char_occurences[max(stop_char_occurences.keys())]
             if max(stop_char_occurences.keys()) == 2: # SingleLine
-                banner_text = [x for x in candidate.cdp_text.split(stop_char) if x != ''][-1]
+                banner_text = [x for x in candidate.text.split(stop_char) if x != ''][-1]
             else: # Multiline
                 banner_text = []
                 # First line
-                first_part_candidates = [x for x in candidate.cdp_text.split(stop_char) if x != ''][1:]
+                first_part_candidates = [x for x in candidate.text.split(stop_char) if x != ''][1:]
                 if len(first_part_candidates):
                     banner_text.append(first_part_candidates[0])
                 for line in self.lines[candidate.number+1:]:
-                    if stop_char in line.cdp_text:
-                        last_part_candidate = [x for x in line.cdp_text.split(stop_char) if x != ''][:1]
+                    if stop_char in line.text:
+                        last_part_candidate = [x for x in line.text.split(stop_char) if x != ''][:1]
                         if len(last_part_candidate):
                             banner_text.append(last_part_candidate[0])
                         break
                     else:
-                        banner_text.append(line.cdp_text)
+                        banner_text.append(line.text)
             if isinstance(banner_text, list):
                 banner_text = '\n'.join(banner_text)
             banners[banner_type] = banner_text

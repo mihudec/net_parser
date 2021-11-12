@@ -75,7 +75,7 @@ class BaseConfigParser(object):
         return f"[BaseConfigParser - {len(self.lines)} lines]"
 
     def __str__(self):
-        return '\n'.join(map(lambda x: x.cdp_text, self.lines))
+        return '\n'.join(map(lambda x: x.text, self.lines))
 
     def load_config(self) -> List[str]:
         raw_lines = load_text(obj=self._config, logger=self.logger)
