@@ -32,10 +32,10 @@ class IosConfigLine(BaseConfigLine):
             cls._registry[regex] = cls
 
     def __new__(cls, *args, **kwargs):
-        text = kwargs.get('text')
+        text = kwargs.get('cdp_text')
         subclass = None
         for pattern, subclass_candidate in cls._registry.items():
-            # print(f"Testing {pattern=} against {text=}")
+            # print(f"Testing {pattern=} against {cdp_text=}")
             if pattern.match(string=text):
                 # print("Pattern matched")
                 subclass = subclass_candidate

@@ -115,7 +115,7 @@ class TestReSearchLines(CommonUtilsTest):
     def test_re_search_lines(self):
 
         lines = re_search_lines(lines=self.SAMPLE_CONFIG.lines, regex=r"interface Vlan1")
-        want = [x for x in self.SAMPLE_CONFIG.lines if x.text == "interface Vlan1"][0]
+        want = [x for x in self.SAMPLE_CONFIG.lines if x.cdp_text == "interface Vlan1"][0]
         have = lines[0]
         self.assertTrue(want is have)
 
@@ -126,7 +126,7 @@ class TestRawMatchLines(CommonUtilsTest):
 
         lines = raw_match_lines(lines=self.SAMPLE_CONFIG.lines, text=r"interface Vlan1")
         want = "interface Vlan1"
-        have = lines[0].text
+        have = lines[0].cdp_text
         self.assertEqual(want, have)
 
 

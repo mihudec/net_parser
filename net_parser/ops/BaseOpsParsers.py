@@ -1,8 +1,13 @@
 import functools
 import re
 
+from pydantic.typing import (Union, List, Dict)
+from nuaal.Parsers import CiscoIOSParser
+
+
 from net_parser.utils import get_logger
-from typing import (Union, List, Dict)
+from net_parser.ops.models import *
+
 
 class BaseOpsParser(object):
 
@@ -117,6 +122,37 @@ class IosCdpNeighborDetailParser(IosOpsParser):
     }
 
 
+class OpsParser(object):
+    _registry = {}
 
+    def __init_subclass__(cls, **kwargs):
+        vendor = kwargs.get('vendor')
+        if vendor is not None:
+            if vendor not in cls._registry.keys():
+                cls._registry[vendor] = {}
+                setattr(cls, 'vendor', vendor)
+            commands = kwargs.get('commands')
+            if commands is not None:
+                cls._registry[vendor][cls] = commands
+                setattr(cls, 'commands', commands)
 
+    def __new__(cls, *args, **kwargs):
+        text = kwargs.get('cdp_text')
+        vendor = kwargs.get('vendor')
+        command = kwargs.get('command')
+        subclass = None
+        if vendor in cls._registry.keys():
+            for subclass_candidate, commands in cls._registry[vendor].items():
+                if command in commands:
+                    subclass = subclass_candidate
+                    break
+        if subclass is None:
+            subclass = cls
+        # instance = object.__new__(subclass)
+        # instance.__init__(*args, **kwargs)
+        return subclass
+
+    @classmethod
+    def parse(cls, text: str):
+        raise NotImplementedError
 

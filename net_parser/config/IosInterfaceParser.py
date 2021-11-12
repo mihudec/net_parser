@@ -69,7 +69,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
     _hsrp_timers_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) timers (?:(?P<milliseconds>msec) )?(?P<hello>\d+) (?P<hold>\d+)", flags=re.MULTILINE)
     _hsrp_track_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) track (?P<track_id>\d+) (?P<action>shutdown|decrement)(?: (?P<decrement_value>\d+))?", flags=re.MULTILINE)
     _hsrp_authentication_regexes = [
-        re.compile(pattern=r"^ standby (?P<group_id>\d+) authentication (?:(?P<method>md5|text) )?(?:key-string )?(?:(?P<encryption_type>\d) )?(?P<value>\S+)$", flags=re.MULTILINE),
+        re.compile(pattern=r"^ standby (?P<group_id>\d+) authentication (?:(?P<method>md5|cdp_text) )?(?:key-string )?(?:(?P<encryption_type>\d) )?(?P<value>\S+)$", flags=re.MULTILINE),
         re.compile(pattern=r"^ standby (?P<group_id>\d+) authentication md5 (?P<method>key-chain) (?P<keychain>\S+)$", flags=re.MULTILINE)
     ]
     _hsrp_name_regex = re.compile(pattern=r"^ standby (?P<group_id>\d+) name (?P<name>\S+)$", flags=re.MULTILINE)
@@ -300,8 +300,8 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
             for c in [x for x in authentication_candidates if x['group_id'] == group_id]:
                 authentication = None
                 if c['method'] is None:
-                    c['method'] = 'text'
-                if c['method'] in ['text', 'md5']:
+                    c['method'] = 'cdp_text'
+                if c['method'] in ['cdp_text', 'md5']:
                     include_keys = {k:v for k,v in c.items() if k in KeyBase.__fields__.keys()}
                     key = KeyBase.parse_obj({k:v for k,v in c.items() if k in include_keys and v is not None})
                     authentication = HsrpAuthentication(method=c['method'], key=key)
@@ -317,7 +317,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
 
         if len(unprocessed_lines):
             pass
-            # data.extra_config = [x.text for x in unprocessed_lines]
+            # data.extra_config = [x.cdp_text for x in unprocessed_lines]
         data = data.copy()
         return data
 
