@@ -53,9 +53,13 @@ class TestLoadText(unittest.TestCase):
         self.assertEqual(len(lines), 1)
 
     def test_load_multiline(self):
-        lines = load_text(obj="Multiline\nstring", logger=TEST_LOGGER)
-        self.assertIsInstance(lines, list)
-        self.assertEqual(len(lines), 2)
+        with self.subTest(msg="Simple Multilile"):
+            lines = load_text(obj="Multiline\nstring", logger=TEST_LOGGER)
+            self.assertIsInstance(lines, list)
+            self.assertEqual(len(lines), 2)
+        with self.subTest(msg="Long multiline"):
+            multiline_string = "\n".join(['abc'] * 10000)
+            lines = load_text(obj=multiline_string, logger=TEST_LOGGER)
 
     def test_load_valid_list(self):
         test_lines = [

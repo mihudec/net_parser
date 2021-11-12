@@ -18,13 +18,17 @@ def check_path(path: pathlib.Path, logger: logging.Logger) -> pathlib.Path:
     if not isinstance(path, pathlib.Path):
         try:
             path = pathlib.Path(path)
+        except (OSError, ValueError) as e:
+            msg = "Path syntax is invalid"
+            logger.debug(msg=msg)
+            raise InvalidPathSyntax(msg)
         except Exception as e:
             msg = f"Unhandled Exception occured while converting string to path. Exception: {repr(e)}"
             logger.critical(msg=msg)
             raise
     try:
         path = path.resolve()
-    except OSError as e:
+    except (OSError, ValueError) as e:
         msg = "Path syntax is invalid"
         logger.debug(msg=msg)
         raise InvalidPathSyntax(msg)
