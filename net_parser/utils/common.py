@@ -59,7 +59,6 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger =
         else:
             lines = list(obj)
     elif isinstance(obj, str):
-        # Might be a path
         try:
             path = check_path(path=obj, logger=logger)
             lines = path.read_text().splitlines()
@@ -67,6 +66,9 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger =
             path = None
             lines = obj.splitlines()
         except InvalidPathSyntax as e:
+            path = None
+            lines = obj.splitlines()
+        except Exception as e:
             path = None
             lines = obj.splitlines()
 
