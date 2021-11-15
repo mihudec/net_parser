@@ -3,7 +3,7 @@ from pydantic.typing import Any, Dict, List, Literal, Optional, Type, Union
 from pydantic import validator, root_validator, Extra
 from pydantic import constr
 from net_models.models import BaseNetModel
-from net_models.fields import BaseInterfaceName
+from net_models.fields import InterfaceName
 
 class BaseOpsModel(BaseNetModel):
 
@@ -22,8 +22,8 @@ class NeighborOpsModel(BaseOpsModel):
     vendor: Optional[constr(to_lower=True)]
     sw_family: Optional[constr(to_lower=True)]
     sw_version: Optional[str]
-    local_interface: BaseInterfaceName
-    remote_interface: BaseInterfaceName
+    local_interface: InterfaceName
+    remote_interface: InterfaceName
     protocol: Optional[Literal['cdp', 'lldp']]
 
     @validator('capabilities', allow_reuse=True, pre=True)
@@ -36,7 +36,7 @@ class NeighborOpsModel(BaseOpsModel):
 
 class InterafceOpsModel(BaseOpsModel):
 
-    name: BaseInterfaceName
+    name: InterfaceName
     description: Optional[str]
     enabled: Optional[bool]
     status: Optional[constr(to_lower=True)]
