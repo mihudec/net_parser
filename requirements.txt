@@ -1,1 +1,1 @@
-net_models>=0.2.0
+net_models>=0.3.0
