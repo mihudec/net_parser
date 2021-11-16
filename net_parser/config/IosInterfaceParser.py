@@ -48,10 +48,13 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
     _ospf_authentication_key = re.compile(pattern=r"^ ip ospf authentication-key(?: (?P<encryption_type>\d))? (?P<value>\S+)", flags=re.MULTILINE)
 
 
-    _isis_process_regex = re.compile(pattern=r"^ ip router isis (?P<name>\S+)\Z")
+    _isis_process_regex = re.compile(pattern=r"^ ip router isis (?P<process_id>\S+)\Z")
     _isis_network_type_regex = re.compile(pattern=r"^ isis network (?P<network_type>\S+)", flags=re.MULTILINE)
     _isis_circuit_type_regex = re.compile(pattern=r"^ isis circuit-type (?P<circuit_type>\S+)", flags=re.MULTILINE)
     _isis_metric_regex = re.compile(pattern=r"^ isis metric (?P<metric>\d+) (?P<level>\S+)", flags=re.MULTILINE)
+    _isis_authentication_mode = re.compile(pattern=r"^ isis authentication mode (?P<mode>md5|text)$", flags=re.MULTILINE)
+    _isis_authentication_keychain = re.compile(pattern=r"^ isis authentication key-chain (?P<keychain>\S+)$", flags=re.MULTILINE)
+
 
 
     _native_vlan_regex = re.compile(pattern=r"^ switchport trunk native vlan (?P<native_vlan>\d+)", flags=re.MULTILINE)
@@ -448,9 +451,29 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         results = self.re_search_children_multipattern(regexes=patterns, group="ALL")
         for entry in results:
             data.update(entry)
+
+        # Metrics section
         results = self.re_search_children(regex=self._isis_metric_regex, group="ALL")
         if len(results):
             data['metric'] = list(results)
+
+        # Authentication section
+        auth_data = {}
+        patterns = [
+            self._isis_authentication_mode,
+            self._isis_authentication_keychain
+        ]
+        results = self.re_search_children_multipattern(regexes=patterns, group="ALL")
+        for entry in results:
+            auth_data.update(entry)
+        if len(auth_data):
+            data['authentication'] = auth_data
+
+        # Convert to model
+        if len(data) == 0:
+            return None
+        else:
+            return InterfaceIsisConfig.parse_obj(data)
 
 
 

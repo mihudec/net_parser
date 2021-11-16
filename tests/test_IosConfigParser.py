@@ -242,6 +242,36 @@ class TestIosInterfaceParser(BaseNetParserTest):
         have = interface_line.ip_mtu
         self.assertEqual(want, have)
 
+    def test_isis(self):
+        config_lines = [
+            "interface TenGigabitEthernet1/0/1",
+            " ip router isis test",
+            " isis circuit-type level-2-only",
+            " isis network point-to-point",
+            " isis metric 10 level-1",
+            " isis metric 10 level-2",
+            " isis authentication mode md5",
+            " isis authentication key-chain ISIS-KEY"
+        ]
+        config = IosConfigParser(config=config_lines)
+        config.parse()
+        interface_line = [x for x  in config.interface_lines if x.name == "TenGigabitEthernet1/0/1"][0]
+        want = InterfaceIsisConfig(
+            process_id='test',
+            network_type='point-to-point',
+            circuit_type='level-2-only',
+            authentication=IsisInterfaceAuthentication(
+                mode='md5',
+                keychain='ISIS-KEY'
+            ),
+            metric=[
+                IsisMetricField(level='level-1', metric=10),
+                IsisMetricField(level='level-2', metric=10),
+            ]
+        )
+        have = interface_line.isis
+        self.assertEqual(want, have)
+
     def test_service_policy(self):
         config_lines = [
             "interface Port-channel1",
