@@ -72,9 +72,12 @@ class BaseConfigParser(object):
         return iter(self.lines)
 
     def __repr__(self):
-        return f"[BaseConfigParser - {len(self.lines)} lines]"
+        return f"[{self.__class__.__name__} - {len(self.lines)} lines]"
 
     def __str__(self):
+        return self.__repr__()
+
+    def to_str(self):
         return '\n'.join(map(lambda x: x.text, self.lines))
 
     def load_config(self) -> List[str]:

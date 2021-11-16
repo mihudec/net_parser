@@ -289,7 +289,7 @@ class BaseConfigLine(object):
         return first_candidate_or_none(candidates=candidates, logger=self.logger, wanted_type=wanted_type)
 
     def __str__(self):
-        return f"[{self._name} #{self.number}\t({self.get_type}): '{self.text}']"
+        return f"[{self.__class__.__name__} #{self.number}\t({self.get_type}): '{self.text}']"
 
     def __repr__(self):
         return self.__str__()

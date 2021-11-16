@@ -322,5 +322,3 @@ class IosConfigParser(BaseConfigParser):
 
         return model
 
-    def __repr__(self):
-        return f"[IosConfigParser - {len(self.lines)} lines]"
