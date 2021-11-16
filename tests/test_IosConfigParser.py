@@ -218,6 +218,30 @@ class TestIosInterfaceParser(BaseNetParserTest):
         have = interface_line.trunk_allowed_vlans
         self.assertEqual(want, have)
 
+    def test_mtu(self):
+        config_lines = [
+            "interface TenGigabitEthernet1/0/1",
+            " mtu 9000"
+        ]
+        config = IosConfigParser(config=config_lines)
+        config.parse()
+        interface_line = [x for x  in config.interface_lines if x.name == "TenGigabitEthernet1/0/1"][0]
+        want = 9000
+        have = interface_line.mtu
+        self.assertEqual(want, have)
+
+    def test_ip_mtu(self):
+        config_lines = [
+            "interface TenGigabitEthernet1/0/1",
+            " ip mtu 9000"
+        ]
+        config = IosConfigParser(config=config_lines)
+        config.parse()
+        interface_line = [x for x  in config.interface_lines if x.name == "TenGigabitEthernet1/0/1"][0]
+        want = 9000
+        have = interface_line.ip_mtu
+        self.assertEqual(want, have)
+
     def test_service_policy(self):
         config_lines = [
             "interface Port-channel1",

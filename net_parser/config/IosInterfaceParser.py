@@ -31,7 +31,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
     _no_lldp_transmit_regex = re.compile(pattern=r"^ no lldp transmit", flags=re.MULTILINE)
     _lldp_receive_regex = re.compile(pattern=r"^ lldp receive", flags=re.MULTILINE)
     _no_lldp_receive_regex = re.compile(pattern=r"^ no lldp receive", flags=re.MULTILINE)
-    _mtu_regex = re.compile(pattern=r"r^ mtu (?P<mtu>\d+)", flags=re.MULTILINE)
+    _mtu_regex = re.compile(pattern=r"^ mtu (?P<mtu>\d+)", flags=re.MULTILINE)
     _ip_mtu_regex = re.compile(pattern=r"^ ip mtu (?P<ip_mtu>\d+)", flags=re.MULTILINE)
     _bandwidth_regex = re.compile(pattern=r"^ bandwidth (?P<bandwidth>\d+)", flags=re.MULTILINE)
     _delay_regex = re.compile(pattern=r"^ delay (?P<delay>\d+)", flags=re.MULTILINE)
