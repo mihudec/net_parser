@@ -83,6 +83,8 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
 
     _service_policy_regex = re.compile(pattern=r"^ service-policy (?P<direction>input|output) (?P<name>\S+$)", flags=re.MULTILINE)
 
+    _ethernet_uni_id = re.compile(pattern=r"^ ethernet uni id (?<uni_id>\S+)$", flags=re.MULTILINE)
+
 
 
 
@@ -216,6 +218,11 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
     @functools.cached_property
     def vrf(self) -> Union[str, None]:
         candidates = self.re_search_children(regex=self._vrf_regex, group=1)
+        return self.first_candidate_or_none(candidates=candidates)
+
+    @functools.cached_property
+    def uni_id(self) -> Union[str, None]:
+        candidates = self.re_search_children(regex=self._ethernet_uni_id, group=1)
         return self.first_candidate_or_none(candidates=candidates)
 
     @functools.cached_property
