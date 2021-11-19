@@ -306,6 +306,9 @@ class IosConfigParser(BaseConfigParser):
     def to_model(self):
         model = HostConfig(interfaces={x.name: x for x in self.interfaces})
 
+        if self.hostname is not None:
+            model.hostname = self.hostname
+
         vrfs = list(self.vrfs)
         if len(vrfs):
             model.vrf_definitions = vrfs
