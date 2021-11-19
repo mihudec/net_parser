@@ -68,6 +68,9 @@ class BaseConfigParser(object):
         self.DEFAULTS = defaults or ConfigDefaults()
 
 
+        self._is_parsed: bool = False
+
+
     def __iter__(self):
         return iter(self.lines)
 
@@ -93,6 +96,7 @@ class BaseConfigParser(object):
         raw_config_lines = self.load_config()
         self.config_lines_str = raw_config_lines
         self._create_cfg_line_objects()
+        self._is_parsed = True
 
     def _check_path(self, filepath):
         path = None
@@ -178,8 +182,10 @@ class BaseConfigParser(object):
 
         """
         start = timeit.default_timer()
+        # Empty self.lines
+        self.lines = [None] * len(self.config_lines_str)
         for number, text in enumerate(self.config_lines_str):
-            self.lines.append(self.CONFIG_LINE_CLS(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
+            self.lines[number] = self.CONFIG_LINE_CLS(number=number, text=text, config=self, verbosity=self.verbosity).return_obj()
         for line in self.lines:
             line.type = line.get_type
         self.logger.debug(msg="Created {} ConfigLine objects in {} ms.".format(len(self.lines), (timeit.default_timer()-start)*1000))

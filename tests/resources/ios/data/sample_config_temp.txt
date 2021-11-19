@@ -1,0 +1,891 @@
+Building configuration...
+
+Current configuration : 22252 bytes
+!
+! Last configuration change at 09:49:15 CET Thu Nov 11 2021 by alef_bures
+!
+version 16.12
+no service pad
+service timestamps debug datetime msec localtime show-timezone year
+service timestamps log datetime msec localtime show-timezone year
+service password-encryption
+service unsupported-transceiver
+platform issu reload interface-module sequence 0 1 2 3 4 5
+platform punt-keepalive disable-kernel-core
+platform bfd-debug-trace 1
+platform xconnect load-balance-hash-algo mac-ip-instanceid
+platform tcam-parity-error enable
+platform tcam-threshold alarm-frequency 1
+!
+hostname CHR-RV1-R1
+!
+boot-start-marker
+boot system flash bootflash:asr900rsp2-universalk9_npe.16.12.05.SPA.bin
+boot-end-marker
+!
+!
+vrf definition L-zw
+ rd 65421:1327
+ !
+ address-family ipv4
+  route-target export 65421:1327
+  route-target import 65421:327
+ exit-address-family
+!
+vrf definition MNG-NOD
+ rd 65421:11
+ !
+ address-family ipv4
+  route-target export 65421:11
+  route-target import 65421:10
+ exit-address-family
+!
+vrf definition Mgmt-intf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+logging userinfo
+logging buffered 10000000
+logging persistent size 6400000 filesize 512000
+no logging console
+enable secret 9 $9$o9QG9xYekvR0Ck$2NAdoYkkDGO/7A.ZmxdMlmK5Mt2oSU4Np9dvGC2uL3Y
+!
+aaa new-model
+!
+!
+aaa group server tacacs+ ISE-TACACS
+ server name tps-isetsdrmal
+ server name tps-isetsdrovd
+ ip vrf forwarding MNG-NOD
+ ip tacacs source-interface Loopback1
+!
+aaa authentication login default group ISE-TACACS local
+aaa authentication login CONSOLE local
+aaa authorization console
+aaa authorization config-commands
+aaa authorization exec default group ISE-TACACS local
+aaa authorization exec CONSOLE local
+aaa authorization commands 1 default group ISE-TACACS local
+aaa authorization commands 1 CONSOLE none
+aaa authorization commands 15 default group ISE-TACACS local
+aaa authorization commands 15 CONSOLE none
+aaa accounting exec default start-stop group ISE-TACACS
+aaa accounting commands 1 default start-stop group ISE-TACACS
+aaa accounting commands 15 default start-stop group ISE-TACACS
+aaa accounting connection default start-stop group ISE-TACACS
+aaa accounting system default start-stop group ISE-TACACS
+!
+!
+!
+!
+!
+aaa session-id common
+clock timezone CET 1 0
+clock summer-time CEST recurring last Sun Mar 2:00 last Sun Oct 3:00
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name tsdr.corp
+!
+!
+!
+login on-failure log
+login on-success log
+!
+!
+!
+!
+!
+!
+!
+mpls label range 6000 32767 static 100 5999
+mpls label protocol ldp
+mpls ldp nsr
+mpls ldp explicit-null
+mpls ldp graceful-restart
+mpls ldp session protection
+mpls ldp igp sync holddown 1000
+mpls ldp label
+ allocate global prefix-list PFX-LDP-BINDING
+mpls ldp discovery targeted-hello accept
+mpls traffic-eng tunnels
+mpls traffic-eng logging lsp path-errors
+mpls traffic-eng logging lsp reservation-errors
+mpls traffic-eng logging lsp preemption
+mpls traffic-eng logging lsp setups
+mpls traffic-eng logging lsp teardowns
+mpls traffic-eng logging tunnel lsp-switchover
+mpls traffic-eng logging tunnel lsp-selection
+mpls traffic-eng logging tunnel path change
+mpls traffic-eng fault-oam
+mpls traffic-eng reoptimize timers frequency 120
+mpls traffic-eng reoptimize timers delay installation 30
+mpls traffic-eng reoptimize timers delay cleanup 90
+mpls traffic-eng nsr
+multilink bundle-name authenticated
+!
+key chain ISIS-KEY
+ key 1
+  key-string 7 0027370F026A5E5E3B3566452F1D37331A0A193D06
+!
+!
+!
+license udi pid ASR-903 sn FOX2521P7F0
+license boot level metroaggrservices
+no license smart enable
+memory free low-watermark processor 5319
+!
+!
+spanning-tree extend system-id
+sdm prefer default
+diagnostic bootup level minimal
+!
+username deployment privilege 15 secret 9 $9$cPFWrtunmn0Gc.$grNr5fZ7iykhOfCTmDmG0mAjbnPvqW749QVi31Ab1gE
+username qpepnmcli privilege 15 secret 9 $9$.q2Vp6tkWRYB0U$zrHe4q3TIg4W6UQ/YxToQp/uorlbsE7USHgEa.v4lpA
+username alef-backup privilege 15 secret 9 $9$B2IA7pmicbKPxU$lDrVo/4jX4j4lx/QuhATh.3ypqAqlJvtpaFsyggM.0.
+username gity-backup privilege 15 secret 9 $9$NJVDGHtL/Dyvp.$SN1fJWICpGwmZ8bnVFcJyFc8N2Nk1nWvEAsojgrtI/I
+!
+redundancy
+ mode sso
+bfd-template single-hop BFD-1hop-5ms
+ interval min-tx 5 min-rx 5 multiplier 3
+!
+bfd-template single-hop BFD-Tunnel-10ms
+ interval min-tx 10 min-rx 10 multiplier 3
+!
+!
+!
+!
+!
+controller SERIAL 0/4/0
+ physical-layer async
+!
+controller SERIAL 0/4/1
+ physical-layer async
+!
+controller SERIAL 0/4/2
+ physical-layer async
+!
+controller SERIAL 0/4/3
+ physical-layer async
+!
+controller SERIAL 0/4/4
+ physical-layer async
+!
+controller SERIAL 0/4/5
+ physical-layer async
+!
+controller SERIAL 0/4/6
+ physical-layer async
+!
+controller SERIAL 0/4/7
+ physical-layer async
+!
+controller SERIAL 0/4/8
+ physical-layer sync
+!
+controller SERIAL 0/4/9
+ physical-layer sync
+!
+controller SERIAL 0/4/10
+ physical-layer sync
+!
+controller SERIAL 0/4/11
+ physical-layer sync
+!
+controller SERIAL 0/4/12
+ physical-layer sync
+!
+controller SERIAL 0/4/13
+ physical-layer sync
+!
+!
+transceiver type all
+ monitoring
+cdp run
+!
+!
+!
+class-map match-any EXP-1
+ match mpls experimental topmost 1
+class-map match-all EXP-2
+ match mpls experimental topmost 2
+class-map match-any EXP-3
+ match mpls experimental topmost 3
+class-map match-all EXP-4
+ match mpls experimental topmost 4
+class-map match-all EXP-5
+ match mpls experimental topmost 5
+class-map match-any EXP-6
+ match mpls experimental topmost 6  7
+!
+policy-map PM-Eth3-10M-In
+ class class-default
+  police cir 10000000 bc 312500
+  set mpls experimental imposition 1
+policy-map PM-Eth3-512k-In
+ class class-default
+  police cir 512000 bc 32000
+  set mpls experimental imposition 1
+policy-map PM-Eth3-40M-In
+ class class-default
+  police cir 40000000 bc 1250000
+  set mpls experimental imposition 1
+policy-map PM-Eth3-80M-In
+ class class-default
+  police cir 80000000 bc 2500000
+  set mpls experimental imposition 1
+policy-map PM-Eth2-64k-In
+ class class-default
+  police cir 64000 bc 16000
+  set mpls experimental imposition 3
+policy-map PM-Eth1-100M-In
+ class class-default
+  police cir 100000000 bc 3125000
+  set mpls experimental imposition 4
+policy-map PM-Eth2-512k-In
+ class class-default
+  police cir 512000 bc 32000
+  set mpls experimental imposition 3
+policy-map PM-BE-256k-In
+ class class-default
+  police cir 256000 bc 32000
+  set mpls experimental imposition 0
+policy-map PM-BE-512k-In
+ class class-default
+  police cir 512000 bc 32000
+  set mpls experimental imposition 0
+policy-map PM-Eth2-256k-In
+ class class-default
+  police cir 256000 bc 32000
+  set mpls experimental imposition 3
+policy-map PM-Eth3-2M-In
+ class class-default
+  police cir 2000000 bc 62500
+  set mpls experimental imposition 1
+policy-map PM-Eth2-100M-In
+ class class-default
+  police cir 100000000 bc 3125000
+  set mpls experimental imposition 3
+policy-map PM-Eth3-8M-In
+ class class-default
+  police cir 8000000 bc 250000
+  set mpls experimental imposition 1
+policy-map PM-Eth2-128k-In
+ class class-default
+  police cir 128000 bc 16000
+  set mpls experimental imposition 3
+policy-map PM-Eth3-200M-In
+ class class-default
+  police cir 200000000 bc 4000000
+  set mpls experimental imposition 1
+policy-map PM-Eth1-2M-In
+ class class-default
+  police cir 2000000 bc 62500
+  set mpls experimental imposition 4
+policy-map PM-Eth1-20M-In
+ class class-default
+  police cir 20000000 bc 625000
+  set mpls experimental imposition 4
+policy-map PM-Eth2-6M-In
+ class class-default
+  police cir 6000000 bc 187500
+  set mpls experimental imposition 3
+policy-map PM-BE-20M-In
+ class class-default
+  police cir 20000000 bc 625000
+  set mpls experimental imposition 0
+policy-map PM-Eth3-60M-In
+ class class-default
+  police cir 60000000 bc 1875000
+  set mpls experimental imposition 1
+policy-map PM-BE-6M-In
+ class class-default
+  police cir 6000000 bc 187500
+  set mpls experimental imposition 0
+policy-map PM-BE-10M-In
+ class class-default
+  police cir 10000000 bc 312500
+  set mpls experimental imposition 0
+policy-map PM-BE-2M-In
+ class class-default
+  police cir 2000000 bc 62500
+  set mpls experimental imposition 0
+policy-map PM-Eth1-256k-In
+ class class-default
+  police cir 256000 bc 32000
+  set mpls experimental imposition 4
+policy-map PM-Eth1-128k-In
+ class class-default
+  police cir 128000 bc 16000
+  set mpls experimental imposition 4
+policy-map PM-MPLS-10G-Out
+ class EXP-5
+  priority level 1 percent 5
+  queue-limit 4000 us
+ class EXP-4
+  priority level 2 percent 5
+  queue-limit 5000 us
+ class EXP-6
+  bandwidth percent 2
+  queue-limit 10000 us
+ class EXP-3
+  bandwidth percent 30
+  queue-limit 10000 us
+ class EXP-2
+  bandwidth percent 3
+  queue-limit 20000 us
+ class EXP-1
+  bandwidth percent 35
+  queue-limit 15000 us
+ class class-default
+  bandwidth percent 20
+  queue-limit 15000 us
+policy-map PM-Eth2-2M-In
+ class class-default
+  police cir 2000000 bc 62500
+  set mpls experimental imposition 3
+policy-map PM-CEM-in
+ class class-default
+  set mpls experimental imposition 5
+policy-map PM-Eth1-64k-In
+ class class-default
+  police cir 64000 bc 16000
+  set mpls experimental imposition 4
+policy-map PM-Eth3-4M-In
+ class class-default
+  police cir 4000000 bc 125000
+  set mpls experimental imposition 1
+policy-map PM-Eth1-10M-In
+ class class-default
+  police cir 10000000 bc 312500
+  set mpls experimental imposition 4
+policy-map PM-Eth2-4M-In
+ class class-default
+  police cir 4000000 bc 125000
+  set mpls experimental imposition 3
+policy-map PM-Eth3-128k-In
+ class class-default
+  police cir 128000 bc 16000
+  set mpls experimental imposition 1
+policy-map PM-Eth2-200M-In
+ class class-default
+  police cir 200000000 bc 4000000
+  set mpls experimental imposition 3
+policy-map PM-BE-60M-In
+ class class-default
+  police cir 60000000 bc 1875000
+  set mpls experimental imposition 0
+policy-map PM-Eth2-60M-In
+ class class-default
+  police cir 60000000 bc 1875000
+  set mpls experimental imposition 3
+policy-map PM-Eth2-20M-In
+ class class-default
+  police cir 20000000 bc 625000
+  set mpls experimental imposition 3
+policy-map PM-Eth2-10M-In
+ class class-default
+  police cir 10000000 bc 312500
+  set mpls experimental imposition 3
+policy-map PM-Eth1-1M-In
+ class class-default
+  police cir 1024000 bc 32000
+  set mpls experimental imposition 4
+policy-map PM-Eth1-40M-In
+ class class-default
+  police cir 40000000 bc 1250000
+  set mpls experimental imposition 4
+policy-map PM-Eth2-80M-In
+ class class-default
+  police cir 80000000 bc 2500000
+  set mpls experimental imposition 3
+policy-map PM-BE-8M-In
+ class class-default
+  police cir 8000000 bc 250000
+  set mpls experimental imposition 0
+policy-map PM-Eth3-20M-In
+ class class-default
+  police cir 20000000 bc 625000
+  set mpls experimental imposition 1
+policy-map PM-Eth3-1M-In
+ class class-default
+  police cir 1024000 bc 32000
+  set mpls experimental imposition 1
+policy-map PM-BE-80M-In
+ class class-default
+  police cir 80000000 bc 2500000
+  set mpls experimental imposition 0
+policy-map PM-Eth2-40M-In
+ class class-default
+  police cir 40000000 bc 1250000
+  set mpls experimental imposition 3
+policy-map PM-Eth1-60M-In
+ class class-default
+  police cir 60000000 bc 1875000
+  set mpls experimental imposition 4
+policy-map PM-Eth3-64k-In
+ class class-default
+  police cir 64000 bc 16000
+  set mpls experimental imposition 1
+policy-map PM-BE-100M-In
+ class class-default
+  police cir 100000000 bc 3125000
+  set mpls experimental imposition 0
+policy-map PM-Eth1-80M-In
+ class class-default
+  police cir 80000000 bc 2500000
+  set mpls experimental imposition 4
+policy-map PM-BE-40M-In
+ class class-default
+  police cir 40000000 bc 1250000
+  set mpls experimental imposition 0
+policy-map PM-Eth1-512k-In
+ class class-default
+  police cir 512000 bc 32000
+  set mpls experimental imposition 4
+policy-map PM-MPLS-1G-Out
+ class EXP-5
+  priority level 1 percent 10
+  queue-limit 4000 us
+ class EXP-4
+  priority level 2 percent 10
+  queue-limit 5000 us
+ class EXP-6
+  bandwidth percent 2
+  queue-limit 25000 us
+ class EXP-3
+  bandwidth percent 25
+  queue-limit 10000 us
+ class EXP-2
+  bandwidth percent 3
+  queue-limit 50000 us
+ class EXP-1
+  bandwidth percent 30
+  queue-limit 20000 us
+ class class-default
+  bandwidth percent 20
+  queue-limit 40000 us
+policy-map PM-BE-4M-In
+ class class-default
+  police cir 4000000 bc 125000
+  set mpls experimental imposition 0
+policy-map PM-BE-128k-In
+ class class-default
+  police cir 128000 bc 16000
+  set mpls experimental imposition 0
+policy-map PM-Eth1-6M-In
+ class class-default
+  police cir 6000000 bc 187500
+  set mpls experimental imposition 4
+policy-map PM-Eth2-8M-In
+ class class-default
+  police cir 8000000 bc 250000
+  set mpls experimental imposition 3
+policy-map PM-BE-200M-In
+ class class-default
+  police cir 200000000 bc 4000000
+  set mpls experimental imposition 0
+policy-map PM-BE-64k-In
+ class class-default
+  police cir 64000 bc 16000
+  set mpls experimental imposition 0
+policy-map PM-Eth1-200M-In
+ class class-default
+  police cir 200000000 bc 4000000
+  set mpls experimental imposition 4
+policy-map PM-Eth2-1M-In
+ class class-default
+  police cir 1024000 bc 32000
+  set mpls experimental imposition 3
+policy-map PM-Eth3-100M-In
+ class class-default
+  police cir 100000000 bc 3125000
+  set mpls experimental imposition 1
+policy-map PM-Eth1-8M-In
+ class class-default
+  police cir 8000000 bc 250000
+  set mpls experimental imposition 4
+policy-map PM-Eth3-6M-In
+ class class-default
+  police cir 6000000 bc 187500
+  set mpls experimental imposition 1
+policy-map PM-Eth1-4M-In
+ class class-default
+  police cir 4000000 bc 125000
+  set mpls experimental imposition 4
+policy-map PM-BE-1M-In
+ class class-default
+  police cir 1024000 bc 32000
+  set mpls experimental imposition 0
+policy-map PM-Eth3-256k-In
+ class class-default
+  police cir 256000 bc 32000
+  set mpls experimental imposition 1
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ description global:CHR-RV1-R1
+ ip address 10.3.200.27 255.255.255.255
+!
+interface Loopback1
+ description mgmt:CHR-RV1-R1
+ vrf forwarding MNG-NOD
+ ip address 10.176.200.27 255.255.255.255
+!
+interface GigabitEthernet0/0/0
+ description to:pme-rv2-r1:0/2/1:GE
+ mtu 9214
+ ip address 10.3.100.62 255.255.255.252
+ ip mtu 9000
+ ip router isis tsdr
+ carrier-delay msec 0
+ negotiation auto
+ cdp enable
+ mpls traffic-eng tunnels
+ synchronous mode
+ bfd template BFD-1hop-5ms
+ isis circuit-type level-2-only
+ isis network point-to-point
+ isis metric 100 level-1
+ isis metric 100 level-2
+ isis authentication mode md5
+ isis authentication key-chain ISIS-KEY
+ service-policy output PM-MPLS-1G-Out
+ ip rsvp bandwidth percent 90
+ ip rsvp signalling hello graceful-restart
+!
+interface GigabitEthernet0/0/1
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/0/2
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/0/3
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/0/4
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/0/5
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/0/6
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/0/7
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/1/0
+ description to:chr-rv1-r2:0/1/0:GE
+ mtu 9214
+ ip address 10.3.102.149 255.255.255.252
+ ip mtu 9000
+ ip router isis tsdr
+ carrier-delay msec 0
+ negotiation auto
+ cdp enable
+ mpls traffic-eng tunnels
+ synchronous mode
+ bfd template BFD-1hop-5ms
+ isis circuit-type level-2-only
+ isis network point-to-point
+ isis metric 100 level-1
+ isis metric 100 level-2
+ isis authentication mode md5
+ isis authentication key-chain ISIS-KEY
+ service-policy output PM-MPLS-1G-Out
+ ip rsvp bandwidth percent 90
+ ip rsvp signalling hello graceful-restart
+!
+interface GigabitEthernet0/1/1
+ description to:chr-rv1-r2:0/1/1:GE
+ mtu 9214
+ ip address 10.3.102.197 255.255.255.252
+ ip mtu 9000
+ ip router isis tsdr
+ carrier-delay msec 0
+ negotiation auto
+ cdp enable
+ mpls traffic-eng tunnels
+ synchronous mode
+ bfd template BFD-1hop-5ms
+ isis circuit-type level-2-only
+ isis network point-to-point
+ isis metric 101 level-1
+ isis metric 101 level-2
+ isis authentication mode md5
+ isis authentication key-chain ISIS-KEY
+ service-policy output PM-MPLS-1G-Out
+ ip rsvp bandwidth percent 90
+ ip rsvp signalling hello graceful-restart
+!
+interface GigabitEthernet0/1/2
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/1/3
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/1/4
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/1/5
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/1/6
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/1/7
+ description ZWAN-MGMT
+ vrf forwarding L-zw
+ ip address 10.187.128.197 255.255.255.252
+ negotiation auto
+!
+interface GigabitEthernet0
+ vrf forwarding Mgmt-intf
+ ip address dhcp
+ negotiation auto
+!
+!
+segment-routing mpls
+ !
+ set-attributes
+  address-family ipv4
+   sr-label-preferred
+  exit-address-family
+ !
+ !
+ connected-prefix-sid-map
+  address-family ipv4
+   10.3.200.27/32 index 27 range 1
+  exit-address-family
+ !
+!
+router isis tsdr
+ net 49.0011.0100.0320.0027.00
+ is-type level-2-only
+ authentication mode md5 level-1
+ authentication mode md5 level-2
+ authentication key-chain ISIS-KEY level-1
+ authentication key-chain ISIS-KEY level-2
+ metric-style wide
+ fast-flood 10
+ set-overload-bit on-startup 180
+ max-lsp-lifetime 65535
+ lsp-refresh-interval 65000
+ spf-interval 5 50 200
+ prc-interval 5 50 200
+ lsp-gen-interval 5 5 200
+ log-adjacency-changes
+ nsf cisco
+ distribute link-state
+ segment-routing mpls
+ segment-routing prefix-sid-map advertise-local
+ fast-reroute per-prefix level-2 route-map RM-HOST-ONLY
+ fast-reroute ti-lfa level-2
+ microloop avoidance segment-routing
+ microloop avoidance rib-update-delay 7000
+ passive-interface Loopback0
+ bfd all-interfaces
+ mpls traffic-eng router-id Loopback0
+ mpls traffic-eng level-2
+!
+router bgp 65421
+ bgp router-id 10.3.200.27
+ bgp log-neighbor-changes
+ no bgp default ipv4-unicast
+ neighbor iBGP-RR peer-group
+ neighbor iBGP-RR remote-as 65421
+ neighbor iBGP-RR ha-mode sso
+ neighbor iBGP-RR password 7 01273520695A545C
+ neighbor iBGP-RR update-source Loopback0
+ neighbor iBGP-RR version 4
+ neighbor iBGP-RR fall-over
+ neighbor 10.3.200.5 peer-group iBGP-RR
+ neighbor 10.3.200.5 description HKH-DI0-R5
+ neighbor 10.3.200.121 peer-group iBGP-RR
+ neighbor 10.3.200.121 description CST-DI0-R4
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family vpnv4
+  bgp additional-paths install
+  neighbor iBGP-RR send-community both
+  neighbor 10.3.200.5 activate
+  neighbor 10.3.200.121 activate
+ exit-address-family
+ !
+ address-family ipv4 vrf L-zw
+  redistribute connected route-map RM-REDISTRIBUTE-CONNECTED-to-BGP
+ exit-address-family
+ !
+ address-family ipv4 vrf MNG-NOD
+  import path selection all
+  import path limit 4
+  redistribute connected route-map RM-REDISTRIBUTE-CONNECTED-to-BGP
+ exit-address-family
+!
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+ip http client source-interface GigabitEthernet0
+ip tftp source-interface GigabitEthernet0
+ip ssh version 2
+ip ssh pubkey-chain
+  username deployment
+   key-hash ssh-rsa 1D1834F27DC0F3B94DBDA02D1A1CF641 deployment@alef-staging-01
+ip scp server enable
+!
+ip access-list standard ACL_NTP-peer
+ 20 permit 10.3.204.253
+ 10 remark ## NTP Servers + NTP Peer ##
+ 10 permit 10.3.204.252
+ 30 permit 10.3.204.254
+ 40 permit 10.3.204.2
+ip access-list standard ACL_NTP-query-only
+ 10 remark ## Deny Any ##
+ 10 deny   any
+ip access-list standard ACL_NTP-serve
+ 10 remark ## Deny Any ##
+ 10 deny   any
+ip access-list standard ACL_NTP-serve-only
+ 10 remark ## Loopbacky smerovacu + EPN-M ##
+ 10 permit 10.3.0.0 0.0.255.255
+!
+!
+ip prefix-list PFX-HOST-ONLY seq 5 permit 0.0.0.0/0 ge 32
+!
+ip prefix-list PFX-LDP-BINDING seq 5 deny 0.0.0.0/0 le 32
+logging history debugging
+logging alarm informational
+logging trap debugging
+logging origin-id hostname
+logging source-interface Loopback1 vrf MNG-NOD
+logging host 10.3.250.10 vrf MNG-NOD
+logging host 10.3.251.10 vrf MNG-NOD
+logging host 10.3.252.14 vrf MNG-NOD
+!
+route-map RM-HOST-ONLY permit 10
+ match ip address prefix-list PFX-HOST-ONLY
+!
+route-map RM-REDISTRIBUTE-CONNECTED-to-BGP permit 10
+ set origin igp
+!
+snmp-server user epnm-rw epnm-rw v3
+snmp-server group epnm-rw v3 noauth
+snmp-server group epnm-rw v3 auth
+snmp-server group epnm-users v3 auth read epnm-ro write epnm-rw
+snmp-server view epnm-ro iso included
+snmp-server view epnm-rw iso included
+snmp-server trap-source Loopback1
+snmp-server source-interface informs Loopback1
+snmp-server ip dscp 16
+snmp-server chassis-id CHR-RV1-R1
+snmp-server enable traps bfd
+snmp-server enable traps isis
+snmp-server enable traps entity-state
+snmp-server enable traps fru-ctrl status
+snmp-server enable traps entity
+snmp-server enable traps ptp
+snmp-server enable traps mpls traffic-eng
+snmp-server enable traps pw vc
+snmp-server host 10.3.250.10 vrf MNG-NOD version 3 auth qpepnmsnm
+snmp-server host 10.3.251.10 vrf MNG-NOD version 3 auth qpepnmsnm
+!
+tacacs server tps-isetsdrmal
+ address ipv4 10.3.250.11
+ key 7 025454723E2A5E0975692437072200111A13000821
+ timeout 10
+ single-connection
+tacacs server tps-isetsdrovd
+ address ipv4 10.3.251.11
+ key 7 115B492C223E5A243D0D060A2A06273805103C2004
+ timeout 10
+ single-connection
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ exec-timeout 30 0
+ authorization commands 15 CONSOLE
+ stopbits 1
+line vty 0 4
+ transport input all
+line vty 5 9
+ transport input all
+line vty 10 63
+ exec-timeout 60 0
+ transport input all
+line vty 64 126
+line 0/4/0 0/4/13
+!
+network-clock revertive
+network-clock synchronization automatic
+network-clock synchronization mode QL-enabled
+network-clock input-source 10 interface GigabitEthernet0/0/0
+network-clock input-source 200 interface GigabitEthernet0/1/1
+network-clock wait-to-restore 60 global
+esmc process
+ntp authentication-key 21 md5 082C7B542D002B1602002D501B061C0717310B445E 7
+ntp authenticate
+ntp trusted-key 21
+ntp access-group peer ACL_NTP-peer
+ntp access-group serve ACL_NTP-serve
+ntp access-group serve-only ACL_NTP-serve-only
+ntp access-group query-only ACL_NTP-query-only
+ntp server 10.3.204.252 key 21
+ntp server 10.3.204.253 key 21
+ntp server 10.3.204.254 key 21
+ntp server 10.3.204.255 key 21
+!
+
+!
+end

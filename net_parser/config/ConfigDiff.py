@@ -56,8 +56,8 @@ class ConfigDiff:
     DEFAULT_IGNORE_LINES = []
 
     def __init__(self,
-                 first: Type[BaseConfigParser],
-                 second: Type[BaseConfigParser],
+                 first: BaseConfigParser,
+                 second: BaseConfigParser,
                  verbosity: int = 4,
                  **kwargs):
         self.logger = get_logger(name='ConfigDiff', verbosity=verbosity)
@@ -81,7 +81,7 @@ class ConfigDiff:
     def present_line(self, line):
         return DiffedLine(text=line.text, action='present')
 
-    def is_ignore_line(self, line: Type[BaseConfigLine], diff_ignore: List[Type[PATTERN_TYPE]] = None) -> bool:
+    def is_ignore_line(self, line: BaseConfigLine, diff_ignore: List[PATTERN_TYPE] = None) -> bool:
         ignore = False
         diff_ignore = diff_ignore or self.DEFAULT_IGNORE_LINES
         if not isinstance(diff_ignore, list):
@@ -95,7 +95,7 @@ class ConfigDiff:
             self.logger.info(msg=f"Ignored line: {line}")
         return ignore
 
-    def diff_line(self, line: Type[BaseConfigLine], other_lines: List[Type[BaseConfigLine]], diff_ignore: List[Type[PATTERN_TYPE]] = None):
+    def diff_line(self, line: BaseConfigLine, other_lines: List[BaseConfigLine], diff_ignore: List[PATTERN_TYPE] = None):
         if 'comment' in line.get_type:
             return []
         if self.is_ignore_line(line=line, diff_ignore=diff_ignore):
@@ -127,7 +127,7 @@ class ConfigDiff:
         self.logger.debug(msg=f"Returning updates:\n{updates}")
         return updates
 
-    def difference(self, diff_ignore: List[Type[PATTERN_TYPE]] = None):
+    def difference(self, diff_ignore: List[PATTERN_TYPE] = None):
         diff_updates = []
         first_top_lines = [x for x in self.first.lines if x.indent == 0]
         second_top_lines = [x for x in self.second.lines if x.indent == 0]
