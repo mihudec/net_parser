@@ -6,9 +6,10 @@ from tests import BaseNetParserTest
 
 from net_models.models.interfaces.InterfaceCommon import *
 from net_models.models.interfaces.L3InterfaceModels import *
+from net_models.models.interfaces.SpModels import *
 from net_models.models.services.ServerModels import *
 
-from net_parser.config import BaseConfigParser, IosConfigParser, BaseConfigLine
+from net_parser.config import BaseConfigParser, IosConfigParser, BaseConfigLine, IosInterfaceParser, IosServiceInstance
 from net_models.inventory import ConfigDefaults
 VERBOSITY = 5
 
@@ -121,6 +122,154 @@ class TestIosConfigParser(BaseNetParserTest):
         have = config.logging
         print(have.yaml(exclude_none=True))
         self.assertEqual(want, have)
+
+    def test_banner(self):
+        test_cases = [
+            {
+                "test_name": "Singleline-01",
+                "config": (
+                    "banner motd ^CTest Banner^C"
+                ),
+                "result": None
+            },
+            {
+                "test_name": "Multiline-01",
+                "config": (
+                    "banner motd ^CHello\n"
+                    "World\n"
+                    "^C"
+                ),
+                "result": None
+            },
+            {
+                "test_name": "Multiline-02",
+                "config": (
+                    "banner motd ^CHello\n"
+                    "World\n"
+                    "End^C\n"
+                    "banner login ^CWoo\n"
+                    "Foo^C\n"
+                ),
+                "result": None
+            }
+        ]
+        for test_case in test_cases:
+            with self.subTest(msg=test_case['test_name']):
+                config = IosConfigParser(config=test_case['config'])
+                config.parse()
+                print(config.banner)
+                #TODO: Make proper evaluation
+
+    def test_password_encryption(self):
+        test_cases = [
+            {
+                "test_name": "Default",
+                "config": (
+                    "!"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Disabled",
+                "config": (
+                    "no service password-encryption"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Enabled",
+                "config": (
+                    "service password-encryption"
+                ),
+                "result": True
+
+            }
+
+        ]
+        for test_case in test_cases:
+            with self.subTest(msg=test_case['test_name']):
+                config = IosConfigParser(config=test_case['config'])
+                config.parse()
+                want = test_case['result']
+                have = config.password_encryption_enabled
+                print(have)
+                self.assertEqual(want, have)
+
+    def test_pad(self):
+        test_cases = [
+            {
+                "test_name": "Default",
+                "config": (
+                    "!"
+                ),
+                "result": True
+
+            },
+            {
+                "test_name": "Disabled",
+                "config": (
+                    "no service pad"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Enabled",
+                "config": (
+                    "service pad"
+                ),
+                "result": True
+
+            }
+
+        ]
+        for test_case in test_cases:
+            with self.subTest(msg=test_case['test_name']):
+                config = IosConfigParser(config=test_case['config'])
+                config.parse()
+                want = test_case['result']
+                have = config.service_pad_enabled
+                print(have)
+                self.assertEqual(want, have)
+
+    def test_ip_finger(self):
+        test_cases = [
+            {
+                "test_name": "Default",
+                "config": (
+                    "!"
+                ),
+                "result": True
+
+            },
+            {
+                "test_name": "Disabled",
+                "config": (
+                    "no ip finger"
+                ),
+                "result": False
+
+            },
+            {
+                "test_name": "Enabled",
+                "config": (
+                    "ip finger"
+                ),
+                "result": True
+
+            }
+
+        ]
+        for test_case in test_cases:
+            with self.subTest(msg=test_case['test_name']):
+                config = IosConfigParser(config=test_case['config'])
+                config.parse()
+                want = test_case['result']
+                have = config.ip_finger_enabled
+                print(have)
+                self.assertEqual(want, have)
 
 
 
@@ -314,153 +463,24 @@ class TestIosInterfaceParser(BaseNetParserTest):
         with self.subTest(msg="Global Disabled"):
             self.assertEqual(interface.proxy_arp_enabled, False)
 
-    def test_banner(self):
-        test_cases = [
-            {
-                "test_name": "Singleline-01",
-                "config": (
-                    "banner motd ^CTest Banner^C"
-                ),
-                "result": None
-            },
-            {
-                "test_name": "Multiline-01",
-                "config": (
-                    "banner motd ^CHello\n"
-                    "World\n"
-                    "^C"
-                ),
-                "result": None
-            },
-            {
-                "test_name": "Multiline-02",
-                "config": (
-                    "banner motd ^CHello\n"
-                    "World\n"
-                    "End^C\n"
-                    "banner login ^CWoo\n"
-                    "Foo^C\n"
-                ),
-                "result": None
-            }
-        ]
-        for test_case in test_cases:
-            with self.subTest(msg=test_case['test_name']):
-                config = IosConfigParser(config=test_case['config'])
-                config.parse()
-                print(config.banner)
-                #TODO: Make proper evaluation
 
-    def test_password_encryption(self):
-        test_cases = [
-            {
-                "test_name": "Default",
-                "config": (
-                    "!"
-                ),
-                "result": False
+    def test_service_instances(self):
+        data_path = self.RESOURCES_DIR.joinpath(f"{self.VENDOR}/data/interface_service_instance_01.txt")
+        config = IosConfigParser(config=data_path, verbosity=VERBOSITY)
+        config.parse()
+        interface_line = config.lines[0]
+        service_instance_lines = interface_line.service_instance_lines
+        service_instances = interface_line.service_instances
+        for i in service_instances:
+            self.assertIsInstance(i, ServiceInstance)
 
-            },
-            {
-                "test_name": "Disabled",
-                "config": (
-                    "no service password-encryption"
-                ),
-                "result": False
 
-            },
-            {
-                "test_name": "Enabled",
-                "config": (
-                    "service password-encryption"
-                ),
-                "result": True
+class TestIosServiceInstance(BaseNetParserTest):
 
-            }
+    VENDOR = 'ios'
+    TEST_CLASS = IosServiceInstance
 
-        ]
-        for test_case in test_cases:
-            with self.subTest(msg=test_case['test_name']):
-                config = IosConfigParser(config=test_case['config'])
-                config.parse()
-                want = test_case['result']
-                have = config.password_encryption_enabled
-                print(have)
-                self.assertEqual(want, have)
 
-    def test_pad(self):
-        test_cases = [
-            {
-                "test_name": "Default",
-                "config": (
-                    "!"
-                ),
-                "result": True
-
-            },
-            {
-                "test_name": "Disabled",
-                "config": (
-                    "no service pad"
-                ),
-                "result": False
-
-            },
-            {
-                "test_name": "Enabled",
-                "config": (
-                    "service pad"
-                ),
-                "result": True
-
-            }
-
-        ]
-        for test_case in test_cases:
-            with self.subTest(msg=test_case['test_name']):
-                config = IosConfigParser(config=test_case['config'])
-                config.parse()
-                want = test_case['result']
-                have = config.service_pad_enabled
-                print(have)
-                self.assertEqual(want, have)
-
-    def test_ip_finger(self):
-        test_cases = [
-            {
-                "test_name": "Default",
-                "config": (
-                    "!"
-                ),
-                "result": True
-
-            },
-            {
-                "test_name": "Disabled",
-                "config": (
-                    "no ip finger"
-                ),
-                "result": False
-
-            },
-            {
-                "test_name": "Enabled",
-                "config": (
-                    "ip finger"
-                ),
-                "result": True
-
-            }
-
-        ]
-        for test_case in test_cases:
-            with self.subTest(msg=test_case['test_name']):
-                config = IosConfigParser(config=test_case['config'])
-                config.parse()
-                want = test_case['result']
-                have = config.ip_finger_enabled
-                print(have)
-                self.assertEqual(want, have)
 
 
 class TestIosAaaParser(BaseNetParserTest):

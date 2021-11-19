@@ -1,0 +1,43 @@
+interface GigabitEthernet0/1/1
+ mtu 1522
+ no ip address
+ negotiation auto
+ cdp enable
+ ethernet uni id SAT-1-TEST-06-B
+ service instance 1 ethernet TEST-201
+  encapsulation dot1q 201
+  service-policy input PM-BE-128k-In
+  snmp trap link-status
+  cfm mep domain EVC mpid 2
+ !
+ service instance 2 ethernet TEST-202
+  encapsulation dot1q 202
+  service-policy input PM-BE-256k-In
+  snmp trap link-status
+  cfm mep domain EVC mpid 2
+ !
+ service instance 3 ethernet TEST-203
+  encapsulation dot1q 203
+  service-policy input PM-BE-512k-In
+  snmp trap link-status
+  cfm mep domain EVC mpid 2
+ !
+ service instance 4 ethernet TEST-204
+  encapsulation dot1q 204
+  service-policy input PM-BE-1M-In
+  snmp trap link-status
+  cfm mep domain EVC mpid 2
+ !
+ service instance 5 ethernet TEST-205
+  encapsulation dot1q 205
+  service-policy input PM-BE-2M-In
+  snmp trap link-status
+  cfm mep domain EVC mpid 2
+ !
+ service instance 10 ethernet
+  encapsulation dot1q 205
+  service-policy input PM-BE-2M-In
+  snmp trap link-status
+  cfm mep domain EVC mpid 2
+ !
+!

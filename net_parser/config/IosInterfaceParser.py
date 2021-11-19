@@ -5,17 +5,19 @@ from net_models.models.interfaces.InterfaceCommon import *
 from net_models.models.interfaces.InterfaceModels import *
 from net_models.models.interfaces.L2InterfaceModels import *
 from net_models.models.interfaces.L3InterfaceModels import *
+from net_models.models.interfaces.SpModels import *
 
 from net_models.validators import expand_vlan_range
 
-from typing import (
+from pydantic.typing import (
+    Generator,
     Union
 )
 
 from net_parser.utils import compile_regex, re_search, re_search_lines, re_filter_lines
 
 INTERFACE_SECTION_REGEX = re.compile(pattern=r'^interface \S+$', flags=re.MULTILINE)
-
+SERVICE_INSTANCE_REGEX = re.compile(pattern=r"^ service instance .*$", flags=re.MULTILINE)
 
 class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
 
@@ -475,7 +477,13 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         else:
             return InterfaceIsisConfig.parse_obj(data)
 
+    @property
+    def service_instance_lines(self) -> Generator['IosServiceInstance', None, None]:
+        return (x for x in self.get_children(max_depth=1) if isinstance(x, IosServiceInstance))
 
+    @property
+    def service_instances(self) -> Generator['ServiceInstance', None, None]:
+        return (x.to_model() for x in self.service_instance_lines)
 
     def to_model(self) -> InterfaceModel:
         self.logger.debug(msg=f"Building model for interface {self.name}")
@@ -509,6 +517,10 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
             if model.discovery_protocols is None:
                 model.discovery_protocols = InterfaceDiscoveryProtocols()
 
+        # Service instances
+        service_instance_list = list(self.service_instances)
+        if len(service_instance_list):
+            model.service_instances = service_instance_list
 
         if self.load_interval is not None:
             model.load_interval = self.load_interval
@@ -552,3 +564,46 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
         return model
 
 
+class IosServiceInstance(IosConfigLine, regex=SERVICE_INSTANCE_REGEX):
+
+    _service_instance_regex = re.compile(pattern=r"^ service instance (?P<si_id>\d+) (?P<si_type>ethernet)(?: (?P<evc>\S+))?$")
+    _description_regex = re.compile(pattern=r"^  description (?P<description>.*?)\Z", flags=re.MULTILINE)
+
+
+    @property
+    def si_id(self):
+        return self.re_search(regex=self._service_instance_regex, group='si_id')
+
+    @property
+    def si_type(self):
+        return self.re_search(regex=self._service_instance_regex, group='si_type')
+
+    @property
+    def evc(self):
+        return self.re_search(regex=self._service_instance_regex, group='evc')
+
+    @functools.cached_property
+    def description(self) -> Union[str, None]:
+        candidates = self.re_search_children(regex=self._description_regex, group=1)
+        return self.first_candidate_or_none(candidates=candidates)
+
+
+    def to_model(self):
+        MODEL_CLASS = ServiceInstance
+        data = {}
+        if self.si_id is not None:
+            data['si_id'] = self.si_id
+        if self.si_type is not None:
+            # TODO: Model field
+            pass
+        if self.evc is not None:
+            data['evc'] = self.evc
+
+        if self.description is not None:
+            data['description'] = self.description
+
+
+        model = MODEL_CLASS.parse_obj(
+            {k:v for k,v in self.re_search(regex=self._service_instance_regex, group="ALL").items() if k in MODEL_CLASS.__fields__.keys() and v is not None}
+        )
+        return model
