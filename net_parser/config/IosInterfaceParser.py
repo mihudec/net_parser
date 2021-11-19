@@ -83,7 +83,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
 
     _service_policy_regex = re.compile(pattern=r"^ service-policy (?P<direction>input|output) (?P<name>\S+$)", flags=re.MULTILINE)
 
-    _ethernet_uni_id = re.compile(pattern=r"^ ethernet uni id (?<uni_id>\S+)$", flags=re.MULTILINE)
+    _ethernet_uni_id = re.compile(pattern=r"^ ethernet uni id (?P<uni_id>\S+)$", flags=re.MULTILINE)
 
 
 
