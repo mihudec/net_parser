@@ -1,8 +1,9 @@
 import pathlib
 import re
 import timeit
+import warnings
 from typing import Union, List, Type
-from net_parser.utils import get_logger, load_text, first_candidate_or_none, compile_regex, match_to_dict, property_autoparse
+from net_parser.utils import get_logger, load_text, first_candidate_or_none, compile_regex, match_to_dict, property_autoparse, re_search_lines
 from net_parser.config import BaseConfigLine
 
 from net_models.inventory import ConfigDefaults
@@ -206,46 +207,9 @@ class BaseConfigParser(object):
         return pattern
 
     def find_objects(self, regex, flags=re.MULTILINE, group: Union[int, str, None] = None):
-        """
-        Function for filtering Config Lines Objects based on given regex.
 
-        Args:
-            regex (:obj:`re.Pattern` or `str`): Regex based on which the search is done
-            flags (:obj:`int`, optional): Set custom flags for regex, defaults to ``re.MULTILINE``
-
-        Examples:
-
-            Example::
-
-                # Initialize the object
-                config = BaseConfigParser(config="/path/to/config_file.cfg")
-
-                # Define regex for matching config lines
-                interface_regex = r"^ interface"
-
-                # Apply the filter
-                interface_lines = config.find_objects(regex=interface_regex)
-
-                # Returns subset of ``self.lines`` which match specified regex
-
-        """
-        pattern = None
-        if not isinstance(regex, self.PATTERN_TYPE):
-            pattern = self._compile_regex(regex=regex, flags=flags)
-        else:
-            pattern = regex
-        lines = []
-        results = []
-        for line in self.lines:
-            result = line.re_search(regex=pattern, group=group)
-            if result:
-                lines.append(line)
-                results.append(result)
-        if group is None:
-            results = list(lines)
-        else:
-            return results
-        self.logger.debug(msg="Matched {} lines for query '{}'".format(len(results), regex))
+        warnings.warn(message=f"You are using a deprecated method 'find_objects'. Please switch to using 're_search_lines'.")
+        results = self.re_search_lines(regex=regex, group=group)
         return results
 
     def get_section_by_parents(self, parents):
@@ -275,7 +239,7 @@ class BaseConfigParser(object):
         if isinstance(parent, BaseConfigLine):
             candidates = [parent]
         elif isinstance(parent, (str, self.PATTERN_TYPE)):
-            candidates = self.find_objects(regex=parent)
+            candidates = self.re_search_lines(regex=parent)
         if len(candidates):
             entries = []
         else:
@@ -313,3 +277,8 @@ class BaseConfigParser(object):
 
     def first_candidate_or_none(self, candidates: list, wanted_type=None):
         return first_candidate_or_none(candidates=candidates, logger=self.logger, wanted_type=wanted_type)
+
+    def re_search_lines(self, regex: re.Pattern, group: str = None) -> List[Union[str, dict, 'BaseConfigLine']]:
+        results = re_search_lines(lines=self.lines, regex=regex, group=group)
+        self.logger.debug(msg="Matched {} lines for query '{}'".format(len(results), regex))
+        return results

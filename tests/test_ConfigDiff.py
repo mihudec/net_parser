@@ -2,7 +2,7 @@ import re
 import pathlib
 import unittest
 
-from net_parser.config import BaseConfigParser, ConfigDiff, IosConfigDiff
+from net_parser.config import BaseConfigParser, ConfigDiff, IosConfigDiff, IosConfigParser
 
 from tests import RESOURCES_DIR
 

@@ -14,7 +14,7 @@ from net_models.inventory import HostConfig, ConfigDefaults
 from net_parser.utils import re_search_lines, re_filter_lines, compile_regex, property_autoparse
 from net_parser.config import (
     BaseConfigParser, BaseConfigLine, IosConfigLine,
-    IosConfigParser, IosInterfaceParser, IosAaaParser, IosVrfDefinitionParser, IosLineParser, IosLoggingLine
+    IosConfigParser, IosInterfaceParser, IosAaaParser, IosVrfDefinitionParser, IosLineParser, IosLoggingLine, IosBannerLine
 )
 
 
@@ -59,7 +59,7 @@ class IosConfigParser(BaseConfigParser):
 
     @functools.cached_property
     def hostname(self):
-        candidates = self.find_objects(regex=self._hostname_regex, group="hostname")
+        candidates = self.re_search_lines(regex=self._hostname_regex, group="hostname")
         return self.first_candidate_or_none(candidates=candidates)
 
     @property
@@ -98,7 +98,7 @@ class IosConfigParser(BaseConfigParser):
     @functools.cached_property
     def ntp(self) -> NtpConfig:
         ntp = NtpConfig()
-        ntp_lines = self.find_objects(regex=self.compile_regex(pattern=r"^ntp .*", flags=re.MULTILINE))
+        ntp_lines = self.re_search_lines(regex=self.compile_regex(pattern=r"^ntp .*", flags=re.MULTILINE))
         if not len(ntp_lines):
             return None
 
@@ -200,7 +200,7 @@ class IosConfigParser(BaseConfigParser):
 
     @functools.cached_property
     def proxy_arp_enabled(self) -> bool:
-        candidates = self.find_objects(regex=self._ip_arp_proxy_disable_regex, group='ALL')
+        candidates = self.re_search_lines(regex=self._ip_arp_proxy_disable_regex, group='ALL')
         candidate = self.first_candidate_or_none(candidates=candidates)
         if candidate is not None:
             candidate = self._val_to_bool(entry=candidate, keys=['no'])
@@ -225,7 +225,7 @@ class IosConfigParser(BaseConfigParser):
         Returns:
 
         """
-        candidates = self.find_objects(regex=regex, group='ALL')
+        candidates = self.re_search_lines(regex=regex, group='ALL')
         candidate = self.first_candidate_or_none(candidates=candidates)
         if candidate is not None:
             candidate = self._val_to_bool(entry=candidate, keys=['no'])
@@ -244,7 +244,7 @@ class IosConfigParser(BaseConfigParser):
     @functools.cached_property
     def banner(self):
         banners = {}
-        candidates = self.find_objects(regex=self._banner_regex)
+        candidates = self.re_search_lines(regex=self._banner_regex)
         stop_chars = ['^C', chr(3)]
         for candidate in candidates:
             banner_type = candidate.re_search(regex=self._banner_regex, group='banner_type')

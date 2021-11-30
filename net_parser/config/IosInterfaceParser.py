@@ -117,7 +117,7 @@ class IosInterfaceParser(IosConfigLine, regex=INTERFACE_SECTION_REGEX):
             return True
         else:
             if self.config.DEFAULTS.INTERFACES_DEFAULT_NO_SHUTDOWN is not None:
-                self.logger.info(msg=f"Interface {self.name}: Using platform default value for interface admin state.")
+                self.logger.debug(msg=f"Interface {self.name}: Using platform default value for interface admin state.")
                 return self.config.DEFAULTS.INTERFACES_DEFAULT_NO_SHUTDOWN
             else:
                 self.logger.debug(msg=f"Interface {self.name}: Platform default for interface admin state not set.")

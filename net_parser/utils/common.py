@@ -127,7 +127,7 @@ def compile_regex(pattern: str, logger: logging.Logger = None, flags=re.MULTILIN
     return compiled_regex
 
 
-def assert_is_regex(regex) -> Type[PATTERN_TYPE]:
+def assert_is_regex(regex) -> PATTERN_TYPE:
     """
     Try to make sure that `regex` is actually a re.compile-d patter. If not, make it so.
 
@@ -231,7 +231,7 @@ def match_to_dict(line: Type['BaseConfigLine'], regexes: List[Type[PATTERN_TYPE]
 
 
 
-def re_search_lines(lines: List['BaseConfigLine'], regex: re.Pattern, group: str = None) -> List[Union[str, dict, Type['BaseConfigLine']]]:
+def re_search_lines(lines: List['BaseConfigLine'], regex: re.Pattern, group: str = None) -> List[Union[str, dict, 'BaseConfigLine']]:
     regex = assert_is_regex(regex)
     result = list(filter(lambda x: bool(regex.search(string=x.text)), lines))
     if group is not None:

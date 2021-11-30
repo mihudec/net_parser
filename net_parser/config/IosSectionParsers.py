@@ -18,6 +18,7 @@ AAA_SECTION_REGEX = re.compile(pattern=r'^aaa \S+.*$', flags=re.MULTILINE)
 VRF_SECTION_REGEX = re.compile(pattern=r'^(?:ip )?vrf definition \S+.*$', flags=re.MULTILINE)
 LOGGING_SECTION_REGEX = re.compile(pattern=r'^logging \S+.*$', flags=re.MULTILINE)
 LINE_SECTION_REGEX = re.compile(pattern=r'^line [a-z]+ \d+(?: \d+)?$')
+BANNER_REGEX = re.compile(pattern=r"^banner (?P<banner_type>\S+)", flags=re.MULTILINE)
 
 
 
@@ -315,3 +316,15 @@ class IosLineParser(IosConfigLine, regex=LINE_SECTION_REGEX):
         data = {k:v for k,v in mapping.items() if v is not None}
         model = IosLineConfig.parse_obj(data)
         return model
+
+
+class IosBannerLine(IosConfigLine, regex=BANNER_REGEX):
+
+    def __init__(self, number: int, text: str, config, verbosity: int = 4):
+        super().__init__(number=number, text=text, config=config, verbosity=verbosity, name="IosBannerLine")
+
+    @property
+    def get_type(self):
+        types = super().get_type
+        types.append('banner')
+        return types
