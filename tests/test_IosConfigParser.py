@@ -76,6 +76,19 @@ class TestIosConfigParser(BaseNetParserTest):
         self.assertEqual(len(candidates), 1)
         self.assertIsInstance(candidates[0], str)
 
+
+    def test_get_formal_config(self):
+        config = self.TEST_CLASS(
+            config=self.RESOURCES_DIR.joinpath('ios_xr').joinpath('data').joinpath('isis_config_01.txt'),
+            verbosity=VERBOSITY
+        )
+        config.parse()
+        have = config.get_formal()
+        # with self.RESOURCES_DIR.joinpath('ios_xr').joinpath('results').joinpath('isis_config_01.txt').open(mode='w') as f:
+        #     f.writelines([f"{x}\n" for x in have])
+        want = self.RESOURCES_DIR.joinpath('ios_xr').joinpath('results').joinpath('isis_config_01.txt').read_text().splitlines()
+        self.assertEqual(want, have)
+
     def test_hostname(self):
         config = self.get_config()
         config.parse()

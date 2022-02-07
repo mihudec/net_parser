@@ -65,7 +65,7 @@ class BaseConfigParser(object):
         self.verbosity = verbosity
         self.logger = get_logger(name=name, verbosity=verbosity)
         self._config = config
-        self.lines = []
+        self.lines: List[BaseConfigLine] = []
         self.DEFAULTS = defaults or ConfigDefaults()
 
 
@@ -96,6 +96,7 @@ class BaseConfigParser(object):
         """
         raw_config_lines = self.load_config()
         self.config_lines_str = raw_config_lines
+        self.fix_indents()
         self._create_cfg_line_objects()
         self._is_parsed = True
 
@@ -282,3 +283,19 @@ class BaseConfigParser(object):
         results = re_search_lines(lines=self.lines, regex=regex, group=group)
         self.logger.debug(msg="Matched {} lines for query '{}'".format(len(results), regex))
         return results
+
+    def get_formal(self):
+        formal_config_lines = []
+        for line in self.lines:
+            if line.is_comment:
+                continue
+            formal_line = ""
+            parents = line.get_parents()
+            # print(f"{parents=} {line=}")
+            if len(parents):
+                formal_line += (" ".join([x.text.lstrip(' ') for x in parents]) + " ")
+            formal_line += line.text.strip(" ")
+            # print(formal_line)
+            formal_config_lines.append(formal_line)
+        # print(formal_config_lines)
+        return formal_config_lines

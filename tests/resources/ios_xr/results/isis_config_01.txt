@@ -1,0 +1,79 @@
+router isis LAB-TEST
+router isis LAB-TEST set-overload-bit on-startup 120
+router isis LAB-TEST is-type level-2-only
+router isis LAB-TEST net 49.0220.0000.0000.0000.00
+router isis LAB-TEST nsr
+router isis LAB-TEST distribute link-state
+router isis LAB-TEST nsf cisco
+router isis LAB-TEST log adjacency changes
+router isis LAB-TEST lsp-gen-interval maximum-wait 5000 initial-wait 10 secondary-wait 100
+router isis LAB-TEST max-lsp-lifetime 65535
+router isis LAB-TEST lsp-refresh-interval 65000
+router isis LAB-TEST lsp-password keychain ISIS_L2
+router isis LAB-TEST address-family ipv4 unicast
+router isis LAB-TEST address-family ipv4 unicast metric-style wide
+router isis LAB-TEST address-family ipv4 unicast microloop avoidance segment-routing
+router isis LAB-TEST address-family ipv4 unicast microloop avoidance rib-update-delay 10000
+router isis LAB-TEST address-family ipv4 unicast segment-routing mpls
+router isis LAB-TEST address-family ipv4 unicast spf-interval maximum-wait 5000 initial-wait 10 secondary-wait 100
+router isis LAB-TEST interface TenGigE0/0/0/1
+router isis LAB-TEST interface TenGigE0/0/0/1 circuit-type level-2-only
+router isis LAB-TEST interface TenGigE0/0/0/1 bfd minimum-interval 5
+router isis LAB-TEST interface TenGigE0/0/0/1 bfd multiplier 3
+router isis LAB-TEST interface TenGigE0/0/0/1 bfd fast-detect ipv4
+router isis LAB-TEST interface TenGigE0/0/0/1 point-to-point
+router isis LAB-TEST interface TenGigE0/0/0/1 hello-password keychain ISIS_L2
+router isis LAB-TEST interface TenGigE0/0/0/1 hello-padding disable
+router isis LAB-TEST interface TenGigE0/0/0/1 address-family ipv4 unicast
+router isis LAB-TEST interface TenGigE0/0/0/1 address-family ipv4 unicast mpls ldp sync
+router isis LAB-TEST interface TenGigE0/0/0/1 address-family ipv4 unicast tag 490000
+router isis LAB-TEST interface TenGigE0/0/0/1 address-family ipv4 unicast fast-reroute per-prefix
+router isis LAB-TEST interface TenGigE0/0/0/1 address-family ipv4 unicast fast-reroute per-prefix ti-lfa
+router isis LAB-TEST interface TenGigE0/0/0/1 address-family ipv4 unicast metric 10
+router isis LAB-TEST interface TenGigE0/0/0/2
+router isis LAB-TEST interface TenGigE0/0/0/2 circuit-type level-2-only
+router isis LAB-TEST interface TenGigE0/0/0/2 bfd minimum-interval 5
+router isis LAB-TEST interface TenGigE0/0/0/2 bfd multiplier 3
+router isis LAB-TEST interface TenGigE0/0/0/2 bfd fast-detect ipv4
+router isis LAB-TEST interface TenGigE0/0/0/2 point-to-point
+router isis LAB-TEST interface TenGigE0/0/0/2 hello-password keychain ISIS_L2
+router isis LAB-TEST interface TenGigE0/0/0/2 hello-padding disable
+router isis LAB-TEST interface TenGigE0/0/0/2 address-family ipv4 unicast
+router isis LAB-TEST interface TenGigE0/0/0/2 address-family ipv4 unicast mpls ldp sync
+router isis LAB-TEST interface TenGigE0/0/0/2 address-family ipv4 unicast tag 491220
+router isis LAB-TEST interface TenGigE0/0/0/2 address-family ipv4 unicast fast-reroute per-prefix
+router isis LAB-TEST interface TenGigE0/0/0/2 address-family ipv4 unicast fast-reroute per-prefix ti-lfa
+router isis LAB-TEST interface TenGigE0/0/0/2 address-family ipv4 unicast metric 10
+router isis LAB-TEST interface TenGigE0/0/0/3
+router isis LAB-TEST interface TenGigE0/0/0/3 circuit-type level-2-only
+router isis LAB-TEST interface TenGigE0/0/0/3 bfd minimum-interval 5
+router isis LAB-TEST interface TenGigE0/0/0/3 bfd multiplier 3
+router isis LAB-TEST interface TenGigE0/0/0/3 bfd fast-detect ipv4
+router isis LAB-TEST interface TenGigE0/0/0/3 point-to-point
+router isis LAB-TEST interface TenGigE0/0/0/3 hello-password keychain ISIS_L2
+router isis LAB-TEST interface TenGigE0/0/0/3 hello-padding disable
+router isis LAB-TEST interface TenGigE0/0/0/3 address-family ipv4 unicast
+router isis LAB-TEST interface TenGigE0/0/0/3 address-family ipv4 unicast mpls ldp sync
+router isis LAB-TEST interface TenGigE0/0/0/3 address-family ipv4 unicast tag 490000
+router isis LAB-TEST interface TenGigE0/0/0/3 address-family ipv4 unicast fast-reroute per-prefix
+router isis LAB-TEST interface TenGigE0/0/0/3 address-family ipv4 unicast fast-reroute per-prefix ti-lfa
+router isis LAB-TEST interface TenGigE0/0/0/3 address-family ipv4 unicast metric 10
+router isis LAB-TEST interface TenGigE0/0/0/4
+router isis LAB-TEST interface TenGigE0/0/0/4 circuit-type level-2-only
+router isis LAB-TEST interface TenGigE0/0/0/4 bfd minimum-interval 5
+router isis LAB-TEST interface TenGigE0/0/0/4 bfd multiplier 3
+router isis LAB-TEST interface TenGigE0/0/0/4 bfd fast-detect ipv4
+router isis LAB-TEST interface TenGigE0/0/0/4 point-to-point
+router isis LAB-TEST interface TenGigE0/0/0/4 hello-password keychain ISIS_L2
+router isis LAB-TEST interface TenGigE0/0/0/4 hello-padding disable
+router isis LAB-TEST interface TenGigE0/0/0/4 address-family ipv4 unicast
+router isis LAB-TEST interface TenGigE0/0/0/4 address-family ipv4 unicast mpls ldp sync
+router isis LAB-TEST interface TenGigE0/0/0/4 address-family ipv4 unicast tag 490000
+router isis LAB-TEST interface TenGigE0/0/0/4 address-family ipv4 unicast fast-reroute per-prefix
+router isis LAB-TEST interface TenGigE0/0/0/4 address-family ipv4 unicast fast-reroute per-prefix ti-lfa
+router isis LAB-TEST interface TenGigE0/0/0/4 address-family ipv4 unicast metric 10
+router isis LAB-TEST interface Loopback0
+router isis LAB-TEST interface Loopback0 passive
+router isis LAB-TEST interface Loopback0 address-family ipv4 unicast
+router isis LAB-TEST interface Loopback0 address-family ipv4 unicast prefix-sid index 1
+router isis LAB-TEST interface Loopback0 address-family ipv4 unicast tag 490000

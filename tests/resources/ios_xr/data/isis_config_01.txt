@@ -1,0 +1,86 @@
+router isis LAB-TEST
+ set-overload-bit on-startup 120
+ is-type level-2-only
+ net 49.0220.0000.0000.0000.00
+ nsr
+ distribute link-state
+ nsf cisco
+ log adjacency changes
+ lsp-gen-interval maximum-wait 5000 initial-wait 10 secondary-wait 100
+ max-lsp-lifetime 65535
+ lsp-refresh-interval 65000
+ lsp-password keychain ISIS_L2
+ address-family ipv4 unicast
+  metric-style wide
+  microloop avoidance segment-routing
+  microloop avoidance rib-update-delay 10000
+  segment-routing mpls
+  spf-interval maximum-wait 5000 initial-wait 10 secondary-wait 100
+ interface TenGigE0/0/0/1
+  circuit-type level-2-only
+  bfd minimum-interval 5
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-password keychain ISIS_L2
+  hello-padding disable
+  address-family ipv4 unicast
+   mpls ldp sync
+   tag 490000
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+   metric 10
+  !
+ interface TenGigE0/0/0/2
+  circuit-type level-2-only
+  bfd minimum-interval 5
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-password keychain ISIS_L2
+  hello-padding disable
+  address-family ipv4 unicast
+   mpls ldp sync
+   tag 491220
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+   metric 10
+  !
+ interface TenGigE0/0/0/3
+  circuit-type level-2-only
+  bfd minimum-interval 5
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-password keychain ISIS_L2
+  hello-padding disable
+  address-family ipv4 unicast
+   mpls ldp sync
+   tag 490000
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+   metric 10
+  !
+ interface TenGigE0/0/0/4
+  circuit-type level-2-only
+  bfd minimum-interval 5
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-password keychain ISIS_L2
+  hello-padding disable
+  address-family ipv4 unicast
+   mpls ldp sync
+   tag 490000
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+   metric 10
+  !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 1
+   tag 490000
+  !
+ !
+!
