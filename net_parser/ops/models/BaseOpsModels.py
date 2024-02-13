@@ -60,3 +60,16 @@ class InterafceOpsModel(BaseOpsModel):
             elif values.get('status') is not None:
                 values['enabled'] = True
         return values
+
+class NextHopV4OpsModel(BaseOpsModel):
+
+    nexthop: ipaddress.IPv4Address
+    metric: Optional[int]
+    interface: Optional[str]
+
+class RouteV4OpsModel(BaseOpsModel):
+
+    prefix: ipaddress.IPv4Network
+    protocol: str
+    distance: Optional[int]
+    nexthops: Optional[List[NextHopV4OpsModel]]

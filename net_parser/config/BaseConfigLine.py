@@ -27,7 +27,8 @@ class BaseConfigLine(object):
 
         """
         self._name = name
-        self.logger = get_logger(name=name, verbosity=verbosity)
+        self.verbosity = verbosity
+        self.logger = get_logger(name=name, verbosity=self.verbosity)
         #print(self.logger.handlers)
         self.config = config
         self.config_lines_obj = self.config.lines
@@ -119,7 +120,7 @@ class BaseConfigLine(object):
         return line
 
 
-    def re_search_children(self, regex, group=None):
+    def re_search_children(self, regex, group=None, max_depth: int = None):
         """
         Search all children for given regex.
 
@@ -174,7 +175,7 @@ class BaseConfigLine(object):
             pattern = regex
         if not pattern:
             return []
-        children = self.get_children()
+        children = self.get_children(max_depth=max_depth)
         return re_search_lines(lines=children, regex=regex, group=group)
 
     # TODO: Add Tests

@@ -53,7 +53,6 @@ class IosCdpNeighborsParser(IosOpsParser, vendor='ios', commands=['show cdp neig
         return [cls.MODEL.parse_obj(x) for x in results]
 
 
-
 class IosInterfaceParser(IosOpsParser, vendor='ios', commands=['show interfaces']):
 
     MODEL = InterafceOpsModel

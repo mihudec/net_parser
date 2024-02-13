@@ -66,6 +66,7 @@ class BaseConfigParser(object):
         self.logger = get_logger(name=name, verbosity=verbosity)
         self._config = config
         self.lines: List[BaseConfigLine] = []
+        self.config_lines_str: List[str] = []
         self.DEFAULTS = defaults or ConfigDefaults()
 
 

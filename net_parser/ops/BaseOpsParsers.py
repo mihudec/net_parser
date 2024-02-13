@@ -78,7 +78,6 @@ class BaseOpsParser(object):
         cls.logger.debug(msg=f"Returning {entry=}")
         return entry
 
-
     def __str__(cls):
         return f"[{cls.__class__.__name__}]"
 
@@ -123,7 +122,9 @@ class IosCdpNeighborDetailParser(IosOpsParser):
 
 
 class OpsParser(object):
+
     _registry = {}
+    logger = get_logger(name="OpsParser", verbosity=4)
 
     def __init_subclass__(cls, **kwargs):
         vendor = kwargs.get('vendor')
@@ -145,12 +146,26 @@ class OpsParser(object):
             for subclass_candidate, commands in cls._registry[vendor].items():
                 if command in commands:
                     subclass = subclass_candidate
+                    subclass.update_class_logger()
                     break
         if subclass is None:
             subclass = cls
         # instance = object.__new__(subclass)
         # instance.__init__(*args, **kwargs)
         return subclass
+
+    @classmethod
+    def update_class_logger(cls, verbosity: int = 4):
+        cls.logger = get_logger(name=cls.__name__, verbosity=verbosity)
+
+    @classmethod
+    def build_entry(cls, match: re.Match):
+        entry = None
+        if len(match.groupdict().keys()):
+            entry = match.groupdict()
+        else:
+            entry = match.group(0)
+        return entry
 
     @classmethod
     def parse(cls, text: str):

@@ -61,7 +61,7 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger =
     elif isinstance(obj, str):
         try:
             path = check_path(path=obj, logger=logger)
-            lines = path.read_text().splitlines()
+            lines = path.read_text(encoding='utf-8').splitlines()
         except FileNotFoundError as e:
             path = None
             lines = obj.splitlines()
@@ -75,7 +75,7 @@ def load_text(obj: Union[pathlib.Path, List[str], str], logger: logging.Logger =
     elif isinstance(obj, pathlib.Path):
         try:
             path = check_path(path=obj, logger=logger)
-            lines = path.read_text().splitlines()
+            lines = path.read_text(encoding='utf-8').splitlines()
         except FileNotFoundError as e:
             msg = f"Got path to load, but the path does not exist. Path: {obj}"
             logger.critical(msg=msg)
@@ -291,3 +291,49 @@ def property_autoparse(lines: List['BaseConfigLine'], candidate_pattern: re.Patt
     for candidate in candidates:
         properties.append(match_to_dict(line=candidate, regexes=regexes))
     return properties
+
+
+class ObjectQuery:
+
+    def __init__(self, key: str, value, operator: str):
+        self.key = key
+        self.value = value
+        self.operator = operator
+
+
+class QuerySentinel:
+    pass
+
+def query_filter(objects, query: ObjectQuery):
+    for obj in objects:
+        if query is not None:
+            actual_value = QuerySentinel()
+            try:
+                actual_value = getattr(obj, query.key)
+            except AttributeError as e:
+                raise
+            if query.operator == 'Eq':
+                if actual_value != query.value:
+                    continue
+            if query.operator == 'notEq':
+                if actual_value == query.value:
+                    continue
+            if query.operator == 'In':
+                if not isinstance(query.value, list):
+                    raise ValueError("When using operator=In, value must be a list")
+                if isinstance(actual_value, list):
+                    if not any([sub_value in actual_value for sub_value in query.value]):
+                        continue
+                else:
+                    if actual_value not in query.value:
+                        continue
+            if query.operator == 'notIn':
+                if not isinstance(query.value, list):
+                    raise ValueError("When using operator=In, value must be a list")
+                if isinstance(actual_value, list):
+                    if any([sub_value in actual_value for sub_value in query.value]):
+                        continue
+                else:
+                    if actual_value in query.value:
+                        continue
+        yield obj
